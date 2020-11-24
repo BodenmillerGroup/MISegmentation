@@ -1,18 +1,56 @@
+from pathlib import Path
 # The main entry point of your workflow.
 # After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
-
 
 report: "report/workflow.rst"
 
 # Allow users to fix the underlying OS via singularity.
-singularity: "docker://continuumio/miniconda3"
+#singularity: "docker://votti/miniconda3mamba:v0.4.2"
+conda: 'envs/env_base.yaml'
 
+# Input
+fol_path_base=Path('/home/vitoz/Data/SegData/Her2_TMA')
+file_path_ilp=fol_path_base / '20161212_Her2_TMA_2.ilp'
+file_path_cpproj=fol_path_base / '20170116_Her2_TMA_2_expand_and_propagate_comparison.cpproj'
+file_path_panel=fol_path_base / 'panel.csv'
+file_path_ometiffs=fol_path_base / 'ometiff'
+fol_path_atiffs=fol_path_base / 'analysis'
+
+
+
+# Output
+fol_path_results = Path('results')
+fol_path_training=fol_path_results / 'training_images'
+fol_path_labels=fol_path_results / 'training_labels'
+file_path_ilp_features=fol_path_results / 'feature_matrix.txt'
+file_path_cp_seg=fol_path_results / 'cellsegmentation.cpproj'
+file_path_cropmeta=fol_path_results / 'training_file_meta.csv'
 
 rule all:
     input:
+        fol_path_labels
         # The first rule should define the default target files
         # Subsequent target rules can be specified below. They should start with all_*.
 
+rule extract_training_labels:
+    input:
+          file_path_ilastik=file_path_ilp
+    output:
+          fol_path_labels=directory(fol_path_labels)
+    conda: 'envs/env_base.yaml'
+    shell:
+         'python workflow/scripts/extract_labels.py {input.file_path_ilastik} {output.fol_path_labels}'
 
-include: "rules/common.smk"
-include: "rules/other.smk"
+rule get_training_cropmeta:
+    input:
+        fol_crop=fol_path_labels
+    output:
+        fn_cropmeta=file_path_cropmeta
+    conda: 'envs/env_base.yaml'
+    shell:
+         'python workflow/scripts/get_cropmeta.py {input.fol_crop} {output.fn_cropmeta}'
+
+
+
+
+
