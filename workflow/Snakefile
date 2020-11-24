@@ -44,7 +44,7 @@ def get_cropnames(wildcards):
 
 rule all:
     input:
-        fol_path_labels, get_cropnames
+        fol_path_labels, get_cropnames, file_path_ilp_features
         # The first rule should define the default target files
         # Subsequent target rules can be specified below. They should start with all_*.
 
@@ -56,6 +56,16 @@ rule extract_training_labels:
     conda: 'envs/env_base.yaml'
     shell:
          'python workflow/scripts/extract_from_ilp.py extract_labels {input.file_path_ilastik} {output.fol_path_labels}'
+
+rule extract_feature_matrix:
+    input:
+         file_path_ilastik=file_path_ilp
+    output:
+         file_path_ilp_features
+    conda: 'envs/env_base.yaml'
+    shell:
+         'python workflow/scripts/extract_from_ilp.py extract_feature_matrix '
+         '{input.file_path_ilastik} {output[0]}'
 
 rule get_training_images:
     input:

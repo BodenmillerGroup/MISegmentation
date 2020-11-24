@@ -55,5 +55,23 @@ def extract_labels(file_path_ilp, fol_path_out,
                 io.imsave(fol_path_out / f'{name}{suffix}',
                           labarr)
 
+def extract_feature_matrix(file_path_ilp, fn_out):
+    """
+    Extracts the feature selection matrix and saves it as
+    a pandas dataframe with named Columns (Scales)
+    and named Index (FeatureIds)
+    :param file_path_ilp:
+    :param fn_out:
+    :return:
+    """
+    with h5py.File(file_path_ilp, 'r') as f:
+        feature_selection = f['FeatureSelections']
+        feature_ids = [f.decode('UTF-8') for f in np.array(feature_selection['FeatureIds'])]
+        scales = np.array(feature_selection['Scales'])
+        selection_mat = np.array(feature_selection['SelectionMatrix'])
+    dat_features = pd.DataFrame(selection_mat, index=feature_ids,
+                                columns=scales)
+    dat_features.to_csv(fn_out, index=True)
+
 if __name__ == '__main__':
-  fire.Fire([extract_labels])
+  fire.Fire()
