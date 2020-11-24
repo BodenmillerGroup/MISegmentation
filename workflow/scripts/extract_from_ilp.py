@@ -56,4 +56,4 @@ def extract_labels(file_path_ilp, fol_path_out,
                           labarr)
 
 if __name__ == '__main__':
-  fire.Fire(extract_labels)
+  fire.Fire([extract_labels])
