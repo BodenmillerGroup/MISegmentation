@@ -21,6 +21,9 @@ fol_path_atiffs=fol_path_base / 'analysis'
 fol_path_ilastikcrops=fol_path_base / 'ilastik_random_combined'
 
 # params
+default_crop_size = (500,500,1)
+
+
 suffix_ilastik = 'ilastik_cells'
 # Output
 fol_path_results = Path('results')
@@ -57,7 +60,8 @@ rule extract_training_labels:
           fol_path_labels=directory(fol_path_labels)
     conda: 'envs/env_base.yaml'
     shell:
-         'python workflow/scripts/extract_from_ilp.py extract_labels {input.file_path_ilastik} {output.fol_path_labels}'
+         'python workflow/scripts/extract_from_ilp.py extract_labels {input.file_path_ilastik} {output.fol_path_labels} '
+         f' --default_img_shape "{default_crop_size}"'
 
 rule extract_feature_matrix:
     input:
