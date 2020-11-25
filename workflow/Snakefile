@@ -12,16 +12,16 @@ report: "report/workflow.rst"
 conda: 'envs/env_base.yaml'
 
 # Input
-fol_path_base=Path('/home/vitoz/Data/SegData/CM2017')
-file_path_ilp=fol_path_base / 'CM2017_cells_NEW.ilp'
-file_path_cpproj=fol_path_base / ''
+fol_path_base=Path('/home/vitoz/Data/SegData/HuBMAP/Data/20191211_analysis_HubMAP_LN_Spleen_thymus')
+file_path_ilp=fol_path_base / 'HubMAP_20191211.ilp'
+file_path_cpproj=fol_path_base / '20191211_analysis_HubMAP_LN_Spleen_thymus'
 file_path_panel=fol_path_base / 'panel.csv'
 file_path_ometiffs=fol_path_base / 'ometiff'
 fol_path_atiffs=fol_path_base / 'analysis'
 fol_path_ilastikcrops=fol_path_base / 'ilastik_random_combined'
 
 # params
-suffix_ilastik = 'ilastik_cells'
+suffix_ilastik = 'ilastik'
 # Output
 fol_path_results = Path('results')
 fol_path_training=fol_path_results / 'training_images'
@@ -87,7 +87,7 @@ checkpoint get_training_cropmeta:
     params:
         re_basic="(?P<cropname>.*)_label\.tiff",
         re_crop=f"(?P<basename>.*)_{suffix_ilastik}_(?P<suffix>.*)",
-        re_suffix="l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"
+        re_suffix="x(?P<x>[0-9]+)_y(?P<y>[0-9]+)_w(?P<w>[0-9]+)_h(?P<h>[0-9]+)"
     run:
         re_basic = re.compile(params.re_basic)
         re_crop = re.compile(params.re_crop)
