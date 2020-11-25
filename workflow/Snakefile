@@ -12,13 +12,13 @@ report: "report/workflow.rst"
 conda: 'envs/env_base.yaml'
 
 # Input
-fol_path_base=Path('/home/vitoz/Data/SegData/Her2_TMA')
-file_path_ilp=fol_path_base / '20161212_Her2_TMA_2.ilp'
-file_path_cpproj=fol_path_base / '20170116_Her2_TMA_2_expand_and_propagate_comparison.cpproj'
+fol_path_base=Path('/home/vitoz/Data/SegData/basel_zuri')
+file_path_ilp=fol_path_base / '20171130_pixelclassification_BaselZuri.ilp'
+file_path_cpproj=fol_path_base / ''
 file_path_panel=fol_path_base / 'panel.csv'
 file_path_ometiffs=fol_path_base / 'ometiff'
 fol_path_atiffs=fol_path_base / 'analysis'
-fol_path_ilastikcrops=(fol_path_base / 'analysis') / 'ilastik_random'
+fol_path_ilastikcrops=fol_path_base / 'ilastik_random_combined'
 
 # Output
 fol_path_results = Path('results')
@@ -44,7 +44,7 @@ def get_cropnames(wildcards):
 
 rule all:
     input:
-        fol_path_labels, get_cropnames, file_path_ilp_features
+        fol_path_labels, file_path_ilp_features, file_path_labelmeta
         # The first rule should define the default target files
         # Subsequent target rules can be specified below. They should start with all_*.
 
@@ -95,7 +95,9 @@ checkpoint get_training_cropmeta:
             for fp in fol_labs.glob('*_label.tiff')}
         for fn, dic in file_dict.items():
             dic.update(**re_crop.match(dic['cropname']).groupdict())
-            dic.update(**re_suffix.match(dic['suffix']).groupdict())
+            suffix_match = re_suffix.match(dic['suffix'])
+            if suffix_match is not None:
+                dic.update(**suffix_match.groupdict())
             dic['filename'] = fn
         pd.DataFrame(file_dict).T.to_csv(output.fn_cropmeta, index=False)
 
