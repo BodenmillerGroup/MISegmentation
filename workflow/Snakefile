@@ -12,8 +12,8 @@ report: "report/workflow.rst"
 conda: 'envs/env_base.yaml'
 
 # Input
-fol_path_base=Path('/home/vitoz/Data/SegData/basel_zuri')
-file_path_ilp=fol_path_base / '20171130_pixelclassification_BaselZuri.ilp'
+fol_path_base=Path('/home/vitoz/Data/SegData/CM2017')
+file_path_ilp=fol_path_base / 'CM2017_cells_NEW.ilp'
 file_path_cpproj=fol_path_base / ''
 file_path_panel=fol_path_base / 'panel.csv'
 file_path_ometiffs=fol_path_base / 'ometiff'
