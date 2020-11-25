@@ -20,6 +20,8 @@ file_path_ometiffs=fol_path_base / 'ometiff'
 fol_path_atiffs=fol_path_base / 'analysis'
 fol_path_ilastikcrops=fol_path_base / 'ilastik_random_combined'
 
+# params
+suffix_ilastik = 'ilastik_cells'
 # Output
 fol_path_results = Path('results')
 fol_path_training=fol_path_results / 'training_images'
@@ -84,7 +86,7 @@ checkpoint get_training_cropmeta:
         fn_cropmeta=file_path_labelmeta
     params:
         re_basic="(?P<cropname>.*)_label\.tiff",
-        re_crop="(?P<basename>.*)_ilastik2_(?P<suffix>.*)",
+        re_crop=f"(?P<basename>.*)_{suffix_ilastik}_(?P<suffix>.*)",
         re_suffix="l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"
     run:
         re_basic = re.compile(params.re_basic)
