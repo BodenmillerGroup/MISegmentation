@@ -12,8 +12,8 @@ report: "report/workflow.rst"
 conda: 'envs/env_base.yaml'
 
 # Input
-fol_path_base=Path('/home/vitoz/Data/SegData/CM2017')
-file_path_ilp=fol_path_base / 'CM2017_cells_NEW.ilp'
+fol_path_base=Path('/home/vitoz/Data/SegData/metabrik')
+file_path_ilp=fol_path_base / 'metabric_new_classifier_20180108.ilp'
 file_path_cpproj=fol_path_base / ''
 file_path_panel=fol_path_base / 'panel.csv'
 file_path_ometiffs=fol_path_base / 'ometiff'
@@ -23,8 +23,7 @@ fol_path_ilastikcrops=fol_path_base / 'ilastik_random_combined'
 # params
 default_crop_size = (500,500,1)
 
-
-suffix_ilastik = 'ilastik_cells'
+suffix_ilastik = 'ilastik2?_s2'
 # Output
 fol_path_results = Path('results')
 fol_path_training=fol_path_results / 'training_images'
@@ -90,8 +89,8 @@ checkpoint get_training_cropmeta:
         fn_cropmeta=file_path_labelmeta
     params:
         re_basic="(?P<cropname>.*)_label\.tiff",
-        re_crop=f"(?P<basename>.*)_{suffix_ilastik}_(?P<suffix>.*)",
-        re_suffix="l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"
+        re_crop=f"(?P<basename>.*_a0)_{suffix_ilastik}_(?P<suffix>.*)",
+        re_suffix="x(?P<x>[0-9]+)_y(?P<y>[0-9]+)_w(?P<w>[0-9]+)_h(?P<h>[0-9]+)"
     run:
         re_basic = re.compile(params.re_basic)
         re_crop = re.compile(params.re_crop)
