@@ -18,7 +18,7 @@ def get_slice(x):
     >> get_slice('[0:1,2:4,4:6]')
     (slice(0,1,None), slice(2,4,None),slice(4,6,None)
     """
-    s = [slice(*[int(i) for i in v.strip('[]').split(':')]) for v in x.split(',')]
+    s = tuple(slice(*[int(i) for i in v.strip('[]').split(':')]) for v in x.split(','))
     return s
 
 def extract_labels(file_path_ilp, fol_path_out,
