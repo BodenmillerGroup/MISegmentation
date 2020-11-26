@@ -20,6 +20,10 @@ file_path_ometiffs=fol_path_base / 'ometiff'
 fol_path_atiffs=fol_path_base / 'analysis'
 fol_path_ilastikcrops=fol_path_base / 'ilastik_random_combined'
 
+
+# Optional input
+fol_resources = Path('resources')
+fn_manual_crop_coordinates = fol_resources / 'manual_coordinates.csv'
 # Output
 fol_path_results = Path('results')
 fol_path_training=fol_path_results / 'training_images'
@@ -85,7 +89,8 @@ checkpoint get_training_cropmeta:
     params:
         re_basic="(?P<cropname>.*)_label\.tiff",
         re_crop="(?P<basename>.*)_ilastik2_(?P<suffix>.*)",
-        re_suffix="l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"
+        re_suffix="l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)",
+        fn_manual_coordinates=fn_manual_crop_coordinates
     run:
         re_basic = re.compile(params.re_basic)
         re_crop = re.compile(params.re_crop)
@@ -99,7 +104,15 @@ checkpoint get_training_cropmeta:
             if suffix_match is not None:
                 dic.update(**suffix_match.groupdict())
             dic['filename'] = fn
-        pd.DataFrame(file_dict).T.to_csv(output.fn_cropmeta, index=False)
+        fn_manual_coordinates = Path(params.fn_manual_coordinates)
+        dat_crops = pd.DataFrame(file_dict).T
+        if fn_manual_coordinates.exists():
+            dat_m_crops = pd.read_csv(fn_manual_crop_coordinates)
+            dat_crops = dat_crops.set_index('basename', drop=False)
+            dat_m_crops = dat_m_crops.set_index('basename', drop=False)
+            dat_crops.update(dat_m_crops, overwrite=False)
+        dat_crops.to_csv(output.fn_cropmeta, index=False)
+
 
 
 
