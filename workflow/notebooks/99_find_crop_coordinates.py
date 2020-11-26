@@ -105,7 +105,7 @@ plt.show()
 
 # %%
 def get_crop_coordinates(img_crop, img_full):
-    result = match_template(im_full, im_crop)
+    result = match_template(img_full, img_crop)
     ij = np.unravel_index(np.argmax(result), result.shape)
     x, y = ij[::-1]
     w, h = img_crop.shape
@@ -117,8 +117,8 @@ def get_crop_coordinates(img_crop, img_full):
 # %%time
 out_list = []
 for fn_crop, fn_full in zip(file_paths_crop, file_paths_full):
-    im_crop = tifffile.imread(str(fp_crop),out = 'memmap')[-1]
-    im_full = tifffile.imread(str(fp_full),out = 'memmap')[-1]
+    im_crop = tifffile.imread(str(fn_crop),out = 'memmap')[-1]
+    im_full = tifffile.imread(str(fn_full),out = 'memmap')[-1]
     x, y, w, h, score = get_crop_coordinates(im_crop, im_full)
     out_list.append({
         'basename': fn_full.name.replace('_ilastik2.tiff',''),
