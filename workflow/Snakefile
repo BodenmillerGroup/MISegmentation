@@ -108,9 +108,11 @@ checkpoint get_training_cropmeta:
         dat_crops = pd.DataFrame(file_dict).T
         if fn_manual_coordinates.exists():
             dat_m_crops = pd.read_csv(fn_manual_crop_coordinates)
+            dat_crops['coord_origin'] = 'name'
+            dat_m_crops['coord_origin'] = 'matching'
             dat_crops = dat_crops.set_index('basename', drop=False)
             dat_m_crops = dat_m_crops.set_index('basename', drop=False)
-            dat_crops.update(dat_m_crops, overwrite=False)
+            dat_crops.update(dat_m_crops, overwrite=True)
         dat_crops.to_csv(output.fn_cropmeta, index=False)
 
 
