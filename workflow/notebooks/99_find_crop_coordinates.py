@@ -132,6 +132,6 @@ for fn_crop, fn_full in zip(file_paths_crop, file_paths_full):
 
 
 # %%
-pd.DataFrame(out_list).to_csv('../../resources/manual_coordiates.csv', index=False)
+pd.DataFrame(out_list).to_csv('../../resources/manual_coordinates.csv', index=False)
 
 # %%
