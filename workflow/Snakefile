@@ -12,20 +12,27 @@ report: "report/workflow.rst"
 conda: 'envs/env_base.yaml'
 
 # Input
-fol_path_base=Path('/home/vitoz/Data/SegData/basel_zuri')
-file_path_ilp=fol_path_base / '20171130_pixelclassification_BaselZuri.ilp'
-file_path_cpproj=fol_path_base / ''
-file_path_panel=fol_path_base / 'panel.csv'
-file_path_ometiffs=fol_path_base / 'ometiff'
-fol_path_atiffs=fol_path_base / 'analysis'
-fol_path_ilastikcrops=fol_path_base / 'ilastik_random_combined'
+remote_fol_path_base=Path('/home/vitoz/Data/SegData/basel_zuri')
+remote_file_path_ilp= remote_fol_path_base / '20171130_pixelclassification_BaselZuri.ilp'
+remote_file_path_panel= remote_fol_path_base / 'panel.csv'
+remote_fol_path_ome= remote_fol_path_base / 'ometiff'
 
+# Not used yet:
+remote_file_path_cpproj= remote_fol_path_base / ''
+remote_fol_path_atiffs= remote_fol_path_base / 'analysis'
+remote_fol_path_ilastikcrops= remote_fol_path_base / 'ilastik_random_combined'
 
 # Optional input
-fol_resources = Path('resources')
-fn_manual_crop_coordinates = fol_resources / 'manual_coordinates.csv'
+fol_path_resources = Path('resources')
+fn_manual_crop_coordinates = fol_path_resources / 'manual_coordinates.csv'
+
 # Output
 fol_path_results = Path('results')
+
+file_path_ilp = fol_path_results / 'ilatik_trained.ilp'
+file_path_panel = fol_path_results / 'panel.csv'
+fol_path_ome = fol_path_results / 'ome'
+
 fol_path_training=fol_path_results / 'training_images'
 file_pat_training_imgs = fol_path_training / '{cropname}.tiff'
 fol_path_labels=fol_path_results / 'training_labels'
@@ -48,7 +55,8 @@ def get_cropnames(wildcards):
 
 rule all:
     input:
-        fol_path_labels, file_path_ilp_features, file_path_labelmeta
+        fol_path_labels, file_path_ilp_features, file_path_labelmeta,
+         fol_path_ome, file_path_panel
         # The first rule should define the default target files
         # Subsequent target rules can be specified below. They should start with all_*.
 
@@ -73,7 +81,7 @@ rule extract_feature_matrix:
 
 rule get_training_images:
     input:
-        fol_path_ilastikcrops / '{cropname}.tiff'
+        remote_fol_path_ilastikcrops / '{cropname}.tiff'
     output:
         fol_path_training / '{cropname}.tiff'
     run:
@@ -117,5 +125,28 @@ checkpoint get_training_cropmeta:
 
 
 
+# Retrieve from remote
+rule get_ilp:
+    input: remote_file_path_ilp
+    output: file_path_ilp
+    shell:
+         """
+         rsync {input[0]} {output[0]}
+         """
 
 
+rule get_panel:
+    input: remote_file_path_panel
+    output: file_path_panel
+    shell:
+         """
+         rsync {input[0]} {output[0]}
+         """
+
+rule get_ome:
+    input: remote_fol_path_ome
+    output: directory(fol_path_ome)
+    shell:
+         """
+         rsync {input[0]} {output[0]}
+         """
