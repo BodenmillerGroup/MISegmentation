@@ -1,0 +1,106 @@
+from pathlib import Path
+import pandas as pd
+import re
+import shutil
+# The main entry point of your workflow.
+# After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
+
+report: "report/workflow.rst"
+
+# Allow users to fix the underlying OS via singularity.
+#singularity: "docker://votti/miniconda3mamba:v0.4.2"
+conda: 'envs/env_base.yaml'
+
+# Input
+fol_path_base=Path('/home/vitoz/Data/SegData/Her2_TMA')
+file_path_ilp=fol_path_base / '20161212_Her2_TMA_2.ilp'
+file_path_cpproj=fol_path_base / '20170116_Her2_TMA_2_expand_and_propagate_comparison.cpproj'
+file_path_panel=fol_path_base / 'panel.csv'
+file_path_ometiffs=fol_path_base / 'ometiff'
+fol_path_atiffs=fol_path_base / 'analysis'
+fol_path_ilastikcrops=(fol_path_base / 'analysis') / 'ilastik_random'
+
+# Output
+fol_path_results = Path('results')
+fol_path_training=fol_path_results / 'training_images'
+file_pat_training_imgs = fol_path_training / '{cropname}.tiff'
+fol_path_labels=fol_path_results / 'training_labels'
+fol_path_ome = fol_path_results / 'ome'
+file_path_ilp_features=fol_path_results / 'feature_matrix.txt'
+file_path_cp_seg=fol_path_results / 'cellsegmentation.cpproj'
+file_path_labelmeta= fol_path_results / 'training_image_meta.csv'
+
+_training_meta = None
+def get_labelmeta():
+    checkpoints.get_training_cropmeta.get()
+    if _training_meta is not None:
+        return _training_meta
+    else:
+        return pd.read_csv(file_path_labelmeta)
+
+
+def get_cropnames(wildcards):
+    cropnames = get_labelmeta()['cropname'].values
+    return expand(file_pat_training_imgs, cropname=cropnames)
+
+rule all:
+    input:
+        fol_path_labels, get_cropnames, file_path_ilp_features
+        # The first rule should define the default target files
+        # Subsequent target rules can be specified below. They should start with all_*.
+
+rule extract_training_labels:
+    input:
+          file_path_ilastik=file_path_ilp
+    output:
+          fol_path_labels=directory(fol_path_labels)
+    conda: 'envs/env_base.yaml'
+    shell:
+         'python workflow/scripts/extract_from_ilp.py extract_labels {input.file_path_ilastik} {output.fol_path_labels}'
+
+rule extract_feature_matrix:
+    input:
+         file_path_ilastik=file_path_ilp
+    output:
+         file_path_ilp_features
+    conda: 'envs/env_base.yaml'
+    shell:
+         'python workflow/scripts/extract_from_ilp.py extract_feature_matrix '
+         '{input.file_path_ilastik} {output[0]}'
+
+rule get_training_images:
+    input:
+        fol_path_ilastikcrops / '{cropname}.tiff'
+    output:
+        fol_path_training / '{cropname}.tiff'
+    run:
+        shutil.copy(input[0], output[0])
+
+
+checkpoint get_training_cropmeta:
+    # TODO: Move into helper function
+    input:
+        fol_labels=fol_path_labels
+    output:
+        fn_cropmeta=file_path_labelmeta
+    params:
+        re_basic="(?P<cropname>.*)_label\.tiff",
+        re_crop="(?P<basename>.*)_ilastik2_(?P<suffix>.*)",
+        re_suffix="l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"
+    run:
+        re_basic = re.compile(params.re_basic)
+        re_crop = re.compile(params.re_crop)
+        re_suffix = re.compile(params.re_suffix)
+        fol_labs = Path(input.fol_labels)
+        file_dict = {fp.name: re_basic.match(fp.name).groupdict()
+            for fp in fol_labs.glob('*_label.tiff')}
+        for fn, dic in file_dict.items():
+            dic.update(**re_crop.match(dic['cropname']).groupdict())
+            dic.update(**re_suffix.match(dic['suffix']).groupdict())
+            dic['filename'] = fn
+        pd.DataFrame(file_dict).T.to_csv(output.fn_cropmeta, index=False)
+
+
+rule get_ome_folder:
+
+
