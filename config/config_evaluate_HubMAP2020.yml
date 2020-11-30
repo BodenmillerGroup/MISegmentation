@@ -1,0 +1,7 @@
+project_id: HubMAP2020
+config_prepare:  ../../config/config_prepare_HubMAP2020.yml
+csv_metal: 'Metal Tag'
+csv_stack_ilastik: 'ilastik'
+
+varia:
+  imctools_container: 'docker://votti/imctools2:2.1.0'

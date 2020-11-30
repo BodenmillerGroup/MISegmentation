@@ -13,7 +13,6 @@ include: 'rules/ilastik.smk'
 
 # Allow users to fix the underlying OS via singularity.
 #singularity: "docker://votti/miniconda3mamba:v0.4.2"
-configfile: 'config/config_evaluate_test.yml'
 conda: 'envs/env_base.yaml'
 validate(config, "schemas/config_evaluate.schema.yml")
 

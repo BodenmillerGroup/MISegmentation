@@ -1,0 +1,3 @@
+[submodule "subworkflows/evaluate_segmentation/resources/ImcPluginsCP"]
+	path = subworkflows/evaluate_segmentation/resources/ImcPluginsCP
+	url = https://github.com/BodenmillerGroup/ImcPluginsCP.git
