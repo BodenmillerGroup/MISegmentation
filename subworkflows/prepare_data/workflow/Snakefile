@@ -108,6 +108,7 @@ checkpoint get_training_cropmeta:
         re_crop=re_label_crop,
         re_suffix=re_label_suffix,
         fn_manual_coordinates=fn_manual_crop_coordinates
+    conda: 'envs/env_base.yaml'
     script:
         'scripts/get_cropmeta.py'
 

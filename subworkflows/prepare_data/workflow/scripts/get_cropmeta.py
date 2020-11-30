@@ -1,11 +1,12 @@
 import pathlib
-
+import re
 import tifffile
+import pandas as pd
 
 
 def get_wh(fn):
-    with tifffile.TiffFile(fn) as im:
-        w, h = reversed(im.shape[1:])
+    with tifffile.TiffFile(str(fn)) as im:
+        w, h = reversed(im.asarray().shape[:2])
     return w, h
 
 if __name__ == '__main__':
@@ -13,7 +14,7 @@ if __name__ == '__main__':
     re_basic = re.compile(sm.params.re_basic)
     re_crop = re.compile(sm.params.re_crop)
     re_suffix = re.compile(sm.params.re_suffix)
-    fol_labs = Path(sm.input.fol_labels)
+    fol_labs = pathlib.Path(sm.input.fol_labels)
     file_dict = {fp.name: re_basic.match(fp.name).groupdict()
                  for fp in fol_labs.glob('*_label.tiff')}
     for fn, dic in file_dict.items():
@@ -26,12 +27,12 @@ if __name__ == '__main__':
         dic['filename'] = fn
         if (dic.get('w', None) is None
             or dic.get('h', None) is None):
-            dic['w'], dic['h'] = get_wh(fn)
+            dic['w'], dic['h'] = get_wh(fol_labs / fn)
 
     fn_manual_coordinates = pathlib.Path(sm.params.fn_manual_coordinates)
     dat_crops = pd.DataFrame(file_dict).T
     if fn_manual_coordinates.exists():
-        dat_m_crops = pd.read_csv(fn_manual_crop_coordinates)
+        dat_m_crops = pd.read_csv(fn_manual_coordinates)
         dat_crops['coord_origin'] = 'name'
         dat_m_crops['coord_origin'] = 'matching'
         dat_crops = dat_crops.set_index('basename', drop=False)
