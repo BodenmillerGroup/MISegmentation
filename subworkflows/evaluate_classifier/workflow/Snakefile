@@ -1,0 +1,98 @@
+from pathlib import Path
+import pandas as pd
+import re
+import shutil
+import pathlib
+from snakemake.utils import validate
+include: 'rules/cellprofiler.smk'
+include: 'rules/ilastik.smk'
+# The main entry point of your workflow.
+# After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
+
+#configfile: 'config/config_prepare.yml'
+
+# Allow users to fix the underlying OS via singularity.
+#singularity: "docker://votti/miniconda3mamba:v0.4.2"
+configfile: 'config/config_evaluate_test.yml'
+conda: 'envs/env_base.yaml'
+validate(config, "schemas/config_evaluate.schema.yml")
+
+cp_plugins = 'resources/ImcPluginsCP/plugins'
+
+cellprofiler_container = 'docker://cellprofiler/cellprofiler:4.0.7'
+imctools_container = config['varia']['imctools_container']
+# Input
+# Regular expressions to extract data from crop filenames
+# params
+# Output
+fol_path_results = Path(config['project_id'])
+
+file_path_panel = fol_path_results / 'panel.csv'
+
+fn_config_prepare_data = config['config_prepare']
+project_id = config['project_id']
+csv_metal = config['csv_metal']
+csv_stack_ilastik = config['csv_stack_ilastik']
+config_stacks = {'ilastik': {'col_bool': csv_stack_ilastik,
+                                     'min_image_size': 50}}
+
+fol_pat_stack = fol_path_results / 'stacks_{stack}'
+fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
+
+fol_path_ilastik_crops = fol_path_results / 'ilastik_crops'
+
+subworkflow prepare_data:
+    workdir: '../../prepare_data/'
+    snakefile:
+             "../../prepare_data/workflow/Snakefile"
+    configfile:
+              fn_config_prepare_data
+
+fn_path_csv = prepare_data(f'{project_id}/panel.csv')
+fol_path_ome = prepare_data(f'{project_id}/ome')
+
+rule all:
+    input: fol_path_stack_ilastik, fol_path_ilastik_crops
+
+rule ome2analysis:
+    input:
+         fol_ome = fol_path_ome,
+         panel = fn_path_csv
+    output:
+          directory(str(fol_pat_stack))
+    container:
+             imctools_container
+    params:
+          column_used = lambda wildcards: config_stacks[wildcards.stack][
+              'col_bool'],
+          column_metal = csv_metal,
+          suffix = '_{stack}',
+          min_imgsize = lambda wildcards: config_stacks[wildcards.stack][
+              'min_image_size']
+    threads: 32
+    script:
+          'scripts/imc2analysis.py'
+
+config_dict_cp = {
+        'ilastik_crops':
+{
+        'message':  """\
+                    Prepare ilastik crops
+                    
+                    This will prepare ilastik crops by reproducing
+                    the pre-labeled                    
+                    """,
+        'run_size': 1,
+        'plugins': cp_plugins,
+        'pipeline': 'resources/1_prepare_ilastik.cppipe',
+        'input_files': [
+            fol_path_stack_ilastik,
+            prepare_data(f'{project_id}/training_image_meta.csv')
+        ],
+        'output_patterns': {'.':
+                            directory(fol_path_ilastik_crops)},
+        'input_folder': prepare_data(f'{project_id}')
+    }
+                 }
+
+define_cellprofiler_rules(config_dict_cp, fol_path_results, container_cp=cellprofiler_container)

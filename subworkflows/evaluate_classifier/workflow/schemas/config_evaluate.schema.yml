@@ -1,0 +1,46 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+description: a configuration for the imc segmentation pipeline
+properties:
+  cellprofiler:
+    type: object
+    description: Cellprofiler defaults
+    properties:
+
+      container:
+        type: string
+        default: 'docker://cellprofiler/cellprofiler:3.1.9'
+        description: Default cellprofiler singularity container
+
+      plugins:
+        type: string
+        default: resources/cp_plugins/ImcPluginsCP/plugins
+        description: path to the default cellprofiler plugins to be used
+
+  ilastik:
+    type: object
+    description: Ilastik defaults
+    properties:
+
+      container:
+        type: string
+        default: 'docker://ilastik/ilastik-from-binary:1.3.3post3'
+        description: Default Ilastik singularity container
+        required: false
+
+      threads:
+        type: integer
+        default: 4
+        description: number of threads to use per ilastik run
+        required: false
+
+      mem_mb:
+        type: integer
+        default: 10000
+        description: memory footprint of an ilastik run in mb
+        required: false
+
+  varia:
+      imctools_container:
+        type: string
+        default: 'docker://votti/imctools2:2.1.0'
+        description: Default imctools singularity container
