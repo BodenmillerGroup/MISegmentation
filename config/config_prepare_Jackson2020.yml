@@ -1,5 +1,5 @@
 ---
-fn_manual_crop_coordinates: ../../resources/jackson_manual_crop_coordinates.csv
+fn_manual_crop_coordinates: ../../resources/manual_crop_coordinates_Jackson2020.csv
 fn_path_cpproj: 20191211_analysis_HubMAP_LN_Spleen_thymus.cpproj
 fn_path_ilp: 20171130_pixelclassification_BaselZuri.ilp
 fn_path_ome: ome_all
@@ -10,4 +10,6 @@ re_label_basic: (?P<cropname>.*)_label\.tiff
 re_label_crop: (?P<basename>.*)_ilastik2_(?P<suffix>.*)
 re_label_suffix: "l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"
 
-fol_path_output: jackson
+fol_path_output: Jackson2020
+
+default_crop_size: (250,250,1)

@@ -4,7 +4,7 @@
 subworkflow prepare_hubmap:
     workdir: '../subworkflows/prepare_data/'
     snakefile:
-        "../subworkflows/prepare_data/workflow/Snakefile"
+             "../subworkflows/prepare_data/workflow/Snakefile"
     configfile:
         "config/config_prepare_HubMAP2020.yml"
 
@@ -14,6 +14,30 @@ subworkflow prepare_jackson:
              "../subworkflows/prepare_data/workflow/Snakefile"
     configfile:
               "config/config_prepare_Jackson2020.yml"
+    
+subworkflow prepare_damond:
+    workdir: '../subworkflows/prepare_data/'
+    snakefile:
+             "../subworkflows/prepare_data/workflow/Snakefile"
+    configfile:
+              "config/config_prepare_Damond2018.yml"
+
+subworkflow prepare_schulz:
+    workdir: '../subworkflows/prepare_data/'
+    snakefile:
+             "../subworkflows/prepare_data/workflow/Snakefile"
+    configfile:
+              "config/config_prepare_Schulz2017.yml"
+
+subworkflow prepare_ali:
+    workdir: '../subworkflows/prepare_data/'
+    snakefile:
+             "../subworkflows/prepare_data/workflow/Snakefile"
+    configfile:
+              "config/config_prepare_Ali2020.yml"
 rule all:
-    input: prepare_hubmap('hubmap/training_image_meta.csv'),
-           prepare_jackson('jackson/training_image_meta.csv')
+    input: prepare_hubmap('HubMAP2020/training_image_meta.csv'),
+           prepare_jackson('Jackson2020/training_image_meta.csv'),
+           prepare_damond('Damond2018/training_image_meta.csv'),
+           prepare_schulz('Schulz2017/training_image_meta.csv'),
+           prepare_ali('Ali2020/training_image_meta.csv')

@@ -1,0 +1,15 @@
+---
+fn_manual_crop_coordinates: manual_crop_coordinates.csv
+fn_path_cpproj: dummy.cpproj
+fn_path_ilp: metabric_new_classifier_20180108.ilp
+fn_path_ome: dummy_ome
+fn_path_panel: panel.csv
+fol_path_base: /home/vitoz/Data/SegData/metabrik
+
+re_label_basic: (?P<cropname>.*)_label\.tiff
+re_label_crop: (?P<basename>.*_a0)_ilastik2?_s2_(?P<suffix>.*)
+re_label_suffix: "x(?P<x>[0-9]+)_y(?P<y>[0-9]+)_w(?P<w>[0-9]+)_h(?P<h>[0-9]+)"
+
+fol_path_output: Ali2020
+
+default_crop_size: (500,500,1)

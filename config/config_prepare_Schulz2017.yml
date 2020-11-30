@@ -1,0 +1,15 @@
+---
+fn_manual_crop_coordinates: manual_crop_coordinates.csv
+fn_path_cpproj: 20170116_Her2_TMA_2_expand_and_propagate_comparison.cpproj
+fn_path_ilp: 20161212_Her2_TMA_2.ilp
+fn_path_ome: analysis/ometiffs_corr
+fn_path_panel: panel.csv
+fol_path_base: /home/vitoz/Data/SegData/Her2_TMA
+
+re_label_basic: (?P<cropname>.*)_label\.tiff
+re_label_crop: (?P<basename>.*)_ilastik2_(?P<suffix>.*)
+re_label_suffix: "l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"
+
+fol_path_output: Schulz2017
+
+default_crop_size: (250,250,1)

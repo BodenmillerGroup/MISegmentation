@@ -1,0 +1,12 @@
+fol_path_base:
+  '/home/vitoz/Data/SegData/basel_zuri'
+fn_path_ilp: '20171130_pixelclassification_BaselZuri.ilp'
+fn_path_panel: 'panel.csv'
+fn_path_ome: 'ome_all'
+fn_path_cpproj: '20191211_analysis_HubMAP_LN_Spleen_thymus.cpproj'
+
+fn_manual_crop_coordinates: 'resources/manual_coordinates.csv'
+
+re_label_basic: "(?P<cropname>.*)_label\.tiff"
+re_label_crop: "(?P<basename>.*)_ilastik2_(?P<suffix>.*)"
+re_label_suffix: "l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"

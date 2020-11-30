@@ -1,0 +1,15 @@
+---
+fn_manual_crop_coordinates: manual_crop_coordinates.csv
+fn_path_cpproj: 20191211_analysis_HubMAP_LN_Spleen_thymus.cpproj
+fn_path_ilp: CM2017_cells_NEW.ilp
+fn_path_ome: ometiff
+fn_path_panel: CM_Panel.csv
+fol_path_base: /home/vitoz/Data/SegData/CM2017
+
+re_label_basic: (?P<cropname>.*)_label\.tiff
+re_label_crop: (?P<basename>.*_a0)(_full)?_ilastik_cells_(?P<suffix>.*)
+re_label_suffix: "x(?P<x>[0-9]+)_y(?P<y>[0-9]+)_w(?P<w>[0-9]+)_h(?P<h>[0-9]+)"
+
+fol_path_output: Damond2018
+
+default_crop_size: (250,250,1)

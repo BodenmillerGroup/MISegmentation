@@ -32,6 +32,8 @@ re_label_basic = config['re_label_basic']
 re_label_crop = config['re_label_crop']
 re_label_suffix = config['re_label_suffix']
 
+# params
+default_crop_size = config['default_crop_size']
 # Output
 fol_path_results = Path(config['fol_path_output'])
 
@@ -74,6 +76,7 @@ rule extract_training_labels:
     conda: 'envs/env_base.yaml'
     shell:
          'python workflow/scripts/extract_from_ilp.py extract_labels {input.file_path_ilastik} {output.fol_path_labels}'
+         f' --default_img_shape "{default_crop_size}"'
 
 rule extract_feature_matrix:
     input:
