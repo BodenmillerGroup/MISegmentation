@@ -2,21 +2,22 @@ from pathlib import Path
 import pandas as pd
 import re
 import shutil
+import pathlib
 # The main entry point of your workflow.
 # After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
 
-report: "report/workflow.rst"
+#configfile: 'config/config_prepare.yml'
 
 # Allow users to fix the underlying OS via singularity.
 #singularity: "docker://votti/miniconda3mamba:v0.4.2"
 conda: 'envs/env_base.yaml'
 
 # Input
-remote_fol_path_base=Path('/home/vitoz/Data/SegData/basel_zuri')
-remote_file_path_ilp= remote_fol_path_base / '20171130_pixelclassification_BaselZuri.ilp'
-remote_file_path_panel= remote_fol_path_base / 'panel.csv'
-remote_fol_path_ome= remote_fol_path_base / 'ome_all'
-remote_fol_path_cpproj = remote_fol_path_base / '20191211_analysis_HubMAP_LN_Spleen_thymus.cpproj'
+remote_fol_path_base= pathlib.Path(config['fol_path_base'])
+remote_file_path_ilp= remote_fol_path_base / config['fn_path_ilp']
+remote_file_path_panel= remote_fol_path_base / config['fn_path_panel']
+remote_fol_path_ome= remote_fol_path_base / config['fn_path_ome']
+remote_fol_path_cpproj = remote_fol_path_base / config['fn_path_cpproj']
 
 # Not used yet:
 remote_fol_path_atiffs= remote_fol_path_base / 'analysis'
@@ -24,17 +25,15 @@ remote_fol_path_ilastikcrops= remote_fol_path_base / 'ilastik_random_combined'
 
 # Optional input
 fol_path_resources = Path('resources')
-fn_manual_crop_coordinates = fol_path_resources / 'manual_coordinates.csv'
+fn_manual_crop_coordinates = config['fn_manual_crop_coordinates']
 
 # Regular expressions to extract data from crop filenames
-suffix_ilastik= "ilastik2"
-re_label_basic = "(?P<cropname>.*)_label\.tiff"
-re_label_crop = f"(?P<basename>.*)_{suffix_ilastik}_(?P<suffix>.*)"
-re_label_suffix = "l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"
-
+re_label_basic = config['re_label_basic']
+re_label_crop = config['re_label_crop']
+re_label_suffix = config['re_label_suffix']
 
 # Output
-fol_path_results = Path('results')
+fol_path_results = Path(config['fol_path_output'])
 
 file_path_ilp = fol_path_results / 'ilatik_trained.ilp'
 file_path_panel = fol_path_results / 'panel.csv'
@@ -115,14 +114,11 @@ checkpoint get_training_cropmeta:
             for fp in fol_labs.glob('*_label.tiff')}
         for fn, dic in file_dict.items():
             crop_match = re_crop.match(dic['cropname'])
-            if crop_match is None:
-                raise ValueError(fn)
-
-            dic.update(**crop_match.groupdict())
+            if crop_match is not None:
+                dic.update(**crop_match.groupdict())
             suffix_match = re_suffix.match(dic['suffix'])
-            if suffix_match is None:
-                raise ValueError(fn)
-            dic.update(**suffix_match.groupdict())
+            if suffix_match is not None:
+                dic.update(**suffix_match.groupdict())
             dic['filename'] = fn
         fn_manual_coordinates = Path(params.fn_manual_coordinates)
         dat_crops = pd.DataFrame(file_dict).T

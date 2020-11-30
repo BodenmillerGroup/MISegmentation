@@ -1,18 +1,19 @@
 # The main entry point of your workflow.
 # After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
 
+subworkflow prepare_hubmap:
+    workdir: '../subworkflows/prepare_data/'
+    snakefile:
+        "../subworkflows/prepare_data/workflow/Snakefile"
+    configfile:
+        "config/config_prepare_HubMAP2020.yml"
 
-report: "report/workflow.rst"
-
-# Allow users to fix the underlying OS via singularity.
-singularity: "docker://continuumio/miniconda3"
-
-
+subworkflow prepare_jackson:
+    workdir: '../subworkflows/prepare_data/'
+    snakefile:
+             "../subworkflows/prepare_data/workflow/Snakefile"
+    configfile:
+              "config/config_prepare_Jackson2020.yml"
 rule all:
-    input:
-        # The first rule should define the default target files
-        # Subsequent target rules can be specified below. They should start with all_*.
-
-
-include: "rules/common.smk"
-include: "rules/other.smk"
+    input: prepare_hubmap('hubmap/training_image_meta.csv'),
+           prepare_jackson('jackson/training_image_meta.csv')
