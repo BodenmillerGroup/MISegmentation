@@ -18,12 +18,11 @@ def get_slice(x):
     >> get_slice('[0:1,2:4,4:6]')
     (slice(0,1,None), slice(2,4,None),slice(4,6,None)
     """
-    s = tuple(slice(*[int(i) for i in v.strip('[]').split(':')]) for v in x.split(','))
+    s = [slice(*[int(i) for i in v.strip('[]').split(':')]) for v in x.split(',')]
     return s
 
 def extract_labels(file_path_ilp, fol_path_out,
-                   suffix='_label',
-                   filetype='.tiff',
+                   suffix='_label.tiff',
                    default_img_shape=(250,250,1)):
     """
     Extracts the labels from an ilastik project
@@ -52,9 +51,9 @@ def extract_labels(file_path_ilp, fol_path_out,
                 labarr[s] += val[:]
             if labarr is None:
                 continue
-            n_label = np.sum(labarr[:]>0)
-            io.imsave(fol_path_out / f'{name}{suffix}_n{int(n_label)}{filetype}',
-                      labarr)
+            if np.sum(labarr[:]>0):
+                io.imsave(fol_path_out / f'{name}{suffix}',
+                          labarr)
 
 def extract_feature_matrix(file_path_ilp, fn_out):
     """
