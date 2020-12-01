@@ -168,7 +168,7 @@ def define_cellprofiler_rules(configs_cp, folder_base,
                     else:
                         fns = [pfn]
                     for fn in fns:
-                        f.write("%s\n" % fn.resolve())
+                        f.write("%s\n" % str(fn.absolute()))
 
     rule cp_create_batch_data:
         message: 'Prepare batch file from file list for CellProfiler run "{wildcards.batchname}"'
