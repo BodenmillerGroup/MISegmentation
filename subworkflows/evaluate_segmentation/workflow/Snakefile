@@ -108,7 +108,7 @@ config_dict_cp = {
                     This will prepare ilastik crops by reproducing
                     the pre-labeled                    
                     """,
-        'run_size': 1,
+        'run_size': 3,
         'plugins': cp_plugins,
         'pipeline': 'resources/1_prepare_ilastik.cppipe',
         'input_files': [

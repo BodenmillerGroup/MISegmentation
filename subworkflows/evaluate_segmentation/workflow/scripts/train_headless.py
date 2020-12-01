@@ -43,11 +43,24 @@ def main():
                                         axis=1
                                         )
 
+    # check if all input files are there:
+    fns_img = [fol_img_data / f for f in dat_meta.fn_img.values]
+    fns_labels = [fol_label_data / f for f in dat_meta.fn_labels.values]
+    missing = []
+    for f in fns_img:
+        if not f.exists():
+            missing.append(f)
+    assert len(missing) == 0, f'Following input imgs are missing: {missing}'
+
+    for f in fns_labels:
+        if not f.exists():
+            missing.append(f)
+    assert len(missing) == 0, f'Following input labels are missing: {missing}'
 
     generate_trained_project_file(
         parsed_args.new_project_name,
-        [str(fol_img_data / f) for f in dat_meta.fn_img.values],
-        [str(fol_label_data / f) for f in dat_meta.fn_labels.values],
+        [str(f) for f in fns_img],
+        [str(f) for f in fns_labels],
         feature_matrix,
         classifier_factory,
     )

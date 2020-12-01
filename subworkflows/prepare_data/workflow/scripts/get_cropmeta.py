@@ -31,6 +31,7 @@ if __name__ == '__main__':
 
     fn_manual_coordinates = pathlib.Path(sm.params.fn_manual_coordinates)
     dat_crops = pd.DataFrame(file_dict).T
+    dat_crops['use'] = 1
     if fn_manual_coordinates.exists():
         dat_m_crops = pd.read_csv(fn_manual_coordinates)
         dat_crops['coord_origin'] = 'name'
@@ -38,5 +39,6 @@ if __name__ == '__main__':
         dat_crops = dat_crops.set_index('basename', drop=False)
         dat_m_crops = dat_m_crops.set_index('basename', drop=False)
         dat_crops.update(dat_m_crops, overwrite=True)
+    dat_crops[['x', 'y', 'w', 'h', 'use']] = dat_crops[['x', 'y', 'w', 'h', 'use']].astype(int)
     dat_crops.to_csv(sm.output.fn_cropmeta, index=False)
 

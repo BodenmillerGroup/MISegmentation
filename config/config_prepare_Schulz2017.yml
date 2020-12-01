@@ -1,5 +1,5 @@
 ---
-fn_manual_crop_coordinates: manual_crop_coordinates.csv
+fn_manual_crop_coordinates: ../../resources/manual_crop_coordinates_Schulz2017.csv
 fn_path_cpproj: 20170116_Her2_TMA_2_expand_and_propagate_comparison.cpproj
 fn_path_ilp: 20161212_Her2_TMA_2.ilp
 fn_path_ome: analysis/ometiffs_corr

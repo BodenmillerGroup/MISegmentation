@@ -1,0 +1,7 @@
+project_id: Damond2018
+config_prepare:  ../../config/config_prepare_Damond2018.yml
+csv_metal: 'MetalTag'
+csv_stack_ilastik: 'ilastik_cells'
+
+varia:
+  imctools_container: 'docker://votti/imctools2:2.1.0'
