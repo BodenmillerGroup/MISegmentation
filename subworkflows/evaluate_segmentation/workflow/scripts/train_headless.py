@@ -39,7 +39,7 @@ def main():
     fol_img_data = pathlib.Path(parsed_args.fol_img_data)
     dat_meta = pd.read_csv(parsed_args.fn_file_meta)
     dat_meta['fn_labels'] = dat_meta['filename']
-    dat_meta['fn_img'] = dat_meta.apply(lambda r: '{basename}_ilastik_x{x}_y{y}_w{w}_h{h}.h5'.format(**dict(r)),
+    dat_meta['fn_img'] = dat_meta.apply(lambda r: '{basename}_x{x}_y{y}_w{w}_h{h}.h5'.format(**dict(r)),
                                         axis=1
                                         )
 

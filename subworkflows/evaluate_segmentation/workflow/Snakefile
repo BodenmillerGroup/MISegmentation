@@ -55,7 +55,7 @@ subworkflow prepare_data:
 
 fn_path_csv = prepare_data(str(fol_prep / 'panel.csv'))
 fol_path_ome = prepare_data(str(fol_prep / 'ome'))
-
+fol_path_ilastik_cropinput = fol_prep / 'ilastik_cropinput'
 rule all:
     input: fol_path_stack_ilastik, fol_path_ilastik_crops,
         fn_ilastik_full
@@ -78,6 +78,22 @@ rule ome2analysis:
     threads: 32
     script:
           'scripts/imc2analysis.py'
+
+rule crop_reproduction_input:
+    input:
+        fol_ilastik=fol_path_stack_ilastik,
+        fn_cropmeta=prepare_data(str(fol_prep / 'training_image_meta.csv'))
+    output:
+        fol_cropinput=directory(fol_path_ilastik_cropinput)
+    run:
+        fol_cropinput = Path(output.fol_cropinput)
+        fol_ilastik = Path(input.fol_ilastik)
+        dat_cropmeta = pd.read_csv(input.fn_cropmeta)
+        fol_cropinput.mkdir()
+        for _, row in dat_cropmeta.iterrows():
+            fn_inp = fol_ilastik / f"{row['basename']}_ilastik.tiff"
+            fn_out = fol_cropinput / f"{row['cropname']}.tiff"
+            fn_out.symlink_to(fn_inp.resolve())
 
 rule get_trained_classifier:
     input:
@@ -112,7 +128,7 @@ config_dict_cp = {
         'plugins': cp_plugins,
         'pipeline': 'resources/1_prepare_ilastik.cppipe',
         'input_files': [
-            fol_path_stack_ilastik,
+            fol_path_ilastik_cropinput,
             prepare_data(str(fol_prep / 'training_image_meta.csv'))
         ],
         'output_patterns': {'.':
