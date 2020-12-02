@@ -8,7 +8,7 @@ fol_path_base: /home/vitoz/Data/SegData/Her2_TMA
 
 re_label_basic: (?P<cropname>.*)_label\.tiff
 re_label_crop: (?P<basename>.*)_ilastik2_(?P<suffix>.*)
-re_label_suffix: "l(?P<cropnr>[0-9]+)_x(?P<x>[0-9]+)_y(?P<y>[0-9]+)"
+re_label_suffix: "l(?P<cropnr>[0-9]+)_x(?P<y>[0-9]+)_y(?P<x>[0-9]+)"
 
 fol_path_output: Schulz2017
 
