@@ -37,7 +37,7 @@ def main():
 
     fol_label_data = pathlib.Path(parsed_args.fol_label_data)
     fol_img_data = pathlib.Path(parsed_args.fol_img_data)
-    dat_meta = pd.read_csv(parsed_args.fn_file_meta)
+    dat_meta = pd.read_csv(parsed_args.fn_file_meta).query("use==1")
     dat_meta['fn_labels'] = dat_meta['filename']
     dat_meta['fn_img'] = dat_meta.apply(lambda r: '{basename}_x{x}_y{y}_w{w}_h{h}.h5'.format(**dict(r)),
                                         axis=1
