@@ -22,6 +22,16 @@ cellprofiler_container = 'docker://cellprofiler/cellprofiler:4.0.7'
 ilastik_container = 'docker://ilastik/ilastik-from-binary:1.3.3post3'
 ilastik_python = '/ilastik-release/bin/python'
 imctools_container = config['varia']['imctools_container']
+
+config_ilastik = {
+    'container': ilastik_container,
+    'threads': 8,
+    'mem_mb': 10000
+}
+
+ilastik_container = config_ilastik['container']
+ilastik_threads = config_ilastik['threads']
+ilastik_mem_mb = config_ilastik['mem_mb']
 # Input
 # Regular expressions to extract data from crop filenames
 # params
@@ -37,14 +47,11 @@ csv_stack_ilastik = config['csv_stack_ilastik']
 config_stacks = {'ilastik': {'col_bool': csv_stack_ilastik,
                                      'min_image_size': 50}}
 
-fol_pat_stack = fol_path_results / 'stacks_{stack}'
-fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
+fol_path_project = pathlib.Path(f"{project_id}")
+suffix_probablities ='_Probabilities'
+suffix_tiff = '.tiff'
 
-fol_path_ilastik_crops = fol_path_results / 'ilastik_crops'
 
-fol_prep = pathlib.Path(f"{project_id}")
-
-fn_ilastik_full = fol_prep / 'ilastik_trained_full.ilp'
 
 subworkflow prepare_data:
     workdir: '../../prepare_data/'
@@ -53,17 +60,33 @@ subworkflow prepare_data:
     configfile:
               fn_config_prepare_data
 
-fn_path_csv = prepare_data(str(fol_prep / 'panel.csv'))
-fol_path_ome = prepare_data(str(fol_prep / 'ome'))
-fol_path_ilastik_cropinput = fol_prep / 'ilastik_cropinput'
+fn_path_panel = prepare_data(str(fol_path_project / 'panel.csv'))
+fol_path_ome = prepare_data(str(fol_path_project / 'ome'))
+file_path_img_meta = prepare_data(str(fol_path_project / 'training_image_meta.csv'))
+fol_path_ilastik_cropinput = fol_path_project / 'ilastik_cropinput'
+fol_path_labels=prepare_data(str(fol_path_project / 'training_labels')),
+file_path_feature_matrix=prepare_data(str(fol_path_project / 'feature_matrix.txt')),
+
+# Output:
+file_path_ilastik_all = fol_path_project / 'ilastik_trained_full.ilp'
+fol_pat_stack = fol_path_results / 'stacks_{stack}'
+fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
+fol_path_ilastik_crops = fol_path_results / 'ilastik_crops'
+
+fol_path_probab_all = fol_path_project / 'probabilities_all'
+
+has_all = fol_path_project / 'all'
+
 rule all:
     input: fol_path_stack_ilastik, fol_path_ilastik_crops,
-        fn_ilastik_full
+         file_path_ilastik_all, fol_path_probab_all
+    output: touch(has_all)
+
 
 rule ome2analysis:
     input:
          fol_ome = fol_path_ome,
-         panel = fn_path_csv
+         panel = fn_path_panel
     output:
           directory(str(fol_pat_stack))
     container:
@@ -82,7 +105,7 @@ rule ome2analysis:
 rule crop_reproduction_input:
     input:
         fol_ilastik=fol_path_stack_ilastik,
-        fn_cropmeta=prepare_data(str(fol_prep / 'training_image_meta.csv'))
+        fn_cropmeta=file_path_img_meta
     output:
         fol_cropinput=directory(fol_path_ilastik_cropinput)
     run:
@@ -97,12 +120,12 @@ rule crop_reproduction_input:
 
 rule get_trained_classifier:
     input:
-        fol_labels=prepare_data(str(fol_prep / 'training_labels')),
-        fol_imgs=fol_path_ilastik_crops,
-        fn_feature_matrix=prepare_data(str(fol_prep / 'feature_matrix.txt')),
-        fn_file_meta=prepare_data(str(fol_prep / 'training_image_meta.csv'))
+        fol_labels=fol_path_labels,
+         fol_imgs=fol_path_ilastik_crops,
+         fn_feature_matrix=file_path_feature_matrix,
+         fn_file_meta=file_path_img_meta
     output:
-        fn_ilastik_full
+        file_path_ilastik_all
     container: ilastik_container
     shell:
         """
@@ -129,12 +152,37 @@ config_dict_cp = {
         'pipeline': 'resources/1_prepare_ilastik.cppipe',
         'input_files': [
             fol_path_ilastik_cropinput,
-            prepare_data(str(fol_prep / 'training_image_meta.csv'))
+            file_path_img_meta
         ],
         'output_patterns': {'.':
                             directory(fol_path_ilastik_crops)},
-        'input_folder': prepare_data(str(fol_prep))
+        'input_folder': prepare_data(str(fol_path_project))
     }
                  }
 
+config_dict_ilastik = {
+    'all':
+        {'message': """\
+                    Runs ilastik classifier run on full dataset
+                    """,
+         'project': str(file_path_ilastik_all),
+         'run_size': 4,
+         'output_format': 'tiff',
+         'output_filename': f'{{nickname}}{suffix_probablities}{suffix_tiff}',
+         'export_source': 'Probabilities',
+         'export_dtype': 'uint16',
+         'pipeline_result_drange': '"[0.0, 1.0]"',
+         'export_drange': '"[0, 65535]"',
+         'input_files':
+         # Folder containing process hdf5
+         # images for ilastik pixel classification
+             fol_path_ilastik_crops,
+         'output_pattern':
+         # Folder containing probability maps for segmentation
+             directory(fol_path_probab_all)
+         }
+}
+
 define_cellprofiler_rules(config_dict_cp, fol_path_results, container_cp=cellprofiler_container)
+define_ilastik_rules(config_dict_ilastik, fol_path_results, threads=ilastik_threads,
+                     mem_mb=ilastik_mem_mb, container_ilastik=ilastik_container)
