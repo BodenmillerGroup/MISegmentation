@@ -65,7 +65,7 @@ subworkflow prepare_data:
 fn_path_panel = prepare_data(str(fol_path_project / 'panel.csv'))
 fol_path_ome = prepare_data(str(fol_path_project / 'ome'))
 file_path_img_meta = prepare_data(str(fol_path_project / 'training_image_meta.csv'))
-fol_path_ilastik_cropinput = fol_path_project / 'ilastik_cropinput'
+fol_path_ilastik_cropinput = fol_path_project / 'cropinput_ilastik'
 fol_path_labels=prepare_data(str(fol_path_project / 'training_labels')),
 file_path_feature_matrix=prepare_data(str(fol_path_project / 'feature_matrix.txt')),
 
@@ -73,10 +73,10 @@ file_path_feature_matrix=prepare_data(str(fol_path_project / 'feature_matrix.txt
 file_path_ilastik_all = fol_path_project / 'ilastik_trained_full.ilp'
 fol_pat_stack = fol_path_results / 'stacks_{stack}'
 fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
-fol_path_ilastik_crops = fol_path_results / 'ilastik_crops'
+fol_path_ilastik_crops = fol_path_results / 'crops_ilastik'
 file_pat_ilastik_crop = fol_path_ilastik_crops / '{cropname}.h5'
-file_pat_ilastik_loo_classifier = fol_path_results / 'ilastik_loo/{cropname}.ilp'
-file_pat_ilastik_loo_probabilities = fol_path_results / 'ilastik_loo_prob/{cropname}_Probabilities.tiff'
+file_pat_ilastik_loo_classifier = fol_path_results / 'loo_class/{cropname}.ilp'
+file_pat_ilastik_loo_probabilities = fol_path_results / 'loo_prob/{cropname}_Probabilities.tiff'
 
 fol_path_probab_all = fol_path_project / 'probabilities_all'
 
