@@ -72,16 +72,35 @@ file_path_ilastik_all = fol_path_project / 'ilastik_trained_full.ilp'
 fol_pat_stack = fol_path_results / 'stacks_{stack}'
 fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
 fol_path_ilastik_crops = fol_path_results / 'ilastik_crops'
+file_pat_ilastik_crop = fol_path_ilastik_crops / '{cropname}.h5'
+file_pat_ilastik_loo_classifier = fol_path_results / 'ilastik_loo/{cropname}.ilp'
 
 fol_path_probab_all = fol_path_project / 'probabilities_all'
 
 has_all = fol_path_project / 'all'
 
+def training_crops(wildcards):
+    checkpoints.cp_training_crops.get()
+    fn_pat = str(file_pat_ilastik_crop)
+    crops, = glob_wildcards(fn_pat)
+    return crops
+
+def loo_classifiers(wildcards):
+    crop_names = training_crops(wildcards)
+    return expand(file_pat_ilastik_loo_classifier, cropname=crop_names)
+
 rule all:
     input: fol_path_stack_ilastik, fol_path_ilastik_crops,
-         file_path_ilastik_all, fol_path_probab_all
+         file_path_ilastik_all, fol_path_probab_all, loo_classifiers
     output: touch(has_all)
 
+
+
+checkpoint cp_training_crops:
+    input:
+        fol_path_ilastik_crops
+    output:
+        touch('x')
 
 rule ome2analysis:
     input:
@@ -139,6 +158,22 @@ rule get_trained_classifier:
             {params.glob_img}
             
         """
+
+rule get_trained_loo_classifier:
+    input: file_path_ilastik_all
+    output: file_pat_ilastik_loo_classifier
+    params:
+        file_name_crop = '{cropname}'
+    container: ilastik_container
+    shell:
+         """
+         {ilastik_python} workflow/scripts/loo_img_training.py \
+            {input[0]} \
+            "{params.file_name_crop}" \
+            {output[0]}
+         """
+
+
 
 
 config_dict_cp = {
