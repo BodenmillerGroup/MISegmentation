@@ -124,6 +124,8 @@ rule get_trained_classifier:
          fol_imgs=fol_path_ilastik_crops,
          fn_feature_matrix=file_path_feature_matrix,
          fn_file_meta=file_path_img_meta
+    params:
+        glob_img=lambda wildcards: '"{basename}_x{x}_y{y}_w{w}_h{h}.h5"'
     output:
         file_path_ilastik_all
     container: ilastik_container
@@ -133,7 +135,8 @@ rule get_trained_classifier:
             {input.fol_imgs} \
             {input.fol_labels} \
             {input.fn_file_meta} \
-            {input.fn_feature_matrix}
+            {input.fn_feature_matrix} \
+            {params.glob_img}
             
         """
 

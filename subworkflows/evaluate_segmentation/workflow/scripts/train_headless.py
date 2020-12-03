@@ -20,8 +20,10 @@ def main():
     parser.add_argument("fol_label_data")
     parser.add_argument("fn_file_meta")
     parser.add_argument("fn_feature_matrix")
+    parser.add_argument("glob_img")
     parsed_args = parser.parse_args()
 
+    glob_img = parsed_args.glob_img
     # Optional: Customize classifier settings
     classifier_factory = None
     # from lazyflow.classifiers import ParallelVigraRfLazyflowClassifierFactory
@@ -39,7 +41,7 @@ def main():
     fol_img_data = pathlib.Path(parsed_args.fol_img_data)
     dat_meta = pd.read_csv(parsed_args.fn_file_meta).query("use==1")
     dat_meta['fn_labels'] = dat_meta['filename']
-    dat_meta['fn_img'] = dat_meta.apply(lambda r: '{basename}_x{x}_y{y}_w{w}_h{h}.h5'.format(**dict(r)),
+    dat_meta['fn_img'] = dat_meta.apply(lambda r: glob_img.format(**dict(r)),
                                         axis=1
                                         )
 
