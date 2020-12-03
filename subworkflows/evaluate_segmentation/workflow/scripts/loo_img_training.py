@@ -86,7 +86,6 @@ def generate_trained_loo_project_file(
     cur_lane = None
     for lane, dataset in enumerate(opDataSelection.DatasetGroup):
         dat = dataset[role_index][0].wait()[0]
-        print(dat.nickname)
         if dat.nickname == name_loo_img:
             cur_lane = lane
             break
@@ -96,14 +95,15 @@ def generate_trained_loo_project_file(
 
     # Set delete the label fro this image by setting all labels to 0
     opPixelClassification = shell.workflow.pcApplet.topLevelOperator
-    label_input_slot = opPixelClassification.LabelInputs[cur_lane]
-    label_output_slot = opPixelClassification.LabelImages[cur_lane]
-    shape = label_output_slot.meta.shape
-    zero_labels = np.zeros(shape=shape, dtype=np.uint8)
-    label_input_slot[fullSlicing(shape)] = zero_labels
-    label_input_slot.setDirty()
-    label_output_slot.disconnect()
-    label_output_slot.setValue(zero_labels)
+    #label_input_slot = opPixelClassification.LabelInputs[cur_lane]
+    #label_output_slot = opPixelClassification.LabelImages[cur_lane]
+    #shape = label_output_slot.meta.shape
+    #zero_labels = np.zeros(shape=shape, dtype=np.uint8)
+    #label_input_slot[fullSlicing(shape)] = zero_labels
+    #label_input_slot.setDirty()
+    #label_output_slot.disconnect()
+    #label_output_slot.setValue(zero_labels)
+    #label_output_slot.setDirty()
     ##
     ## TRAIN CLASSIFIER
     ##
@@ -113,7 +113,14 @@ def generate_trained_loo_project_file(
     opPixelClassification.FreezePredictions.setValue(False)
 
     # Mark the classifier as dirty to force re-training it
-    opPixelClassification.opTrain.ClassifierFactory.setDirty()
+    cur_labs = opPixelClassification.opTrain.Labels[cur_lane]
+    up_lab=cur_labs.upstream_slot.upstream_slot.upstream_slot
+    zero_labels = np.zeros(shape=up_lab.meta.shape, dtype=np.uint8)
+    up_lab.setValue(zero_labels)
+    up_lab.setDirty()
+    #cur_labs.disconnect()
+    #cur_labs.value[:] = 0
+    #opPixelClassification.opTrain.ClassifierFactory.setDirty()
     # Request the classifier object from the pipeline.
     # This forces the pipeline to produce (train) the classifier.
     _ = opPixelClassification.Classifier.value

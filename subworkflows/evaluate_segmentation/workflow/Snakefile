@@ -21,7 +21,9 @@ cp_plugins = 'resources/ImcPluginsCP/plugins'
 cellprofiler_container = 'docker://cellprofiler/cellprofiler:4.0.7'
 ilastik_container = 'docker://ilastik/ilastik-from-binary:1.3.3post3'
 ilastik_python = '/ilastik-release/bin/python'
+ilastik_bin = '/ilastik-release/run_ilastik.sh'
 imctools_container = config['varia']['imctools_container']
+
 
 config_ilastik = {
     'container': ilastik_container,
@@ -74,6 +76,7 @@ fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
 fol_path_ilastik_crops = fol_path_results / 'ilastik_crops'
 file_pat_ilastik_crop = fol_path_ilastik_crops / '{cropname}.h5'
 file_pat_ilastik_loo_classifier = fol_path_results / 'ilastik_loo/{cropname}.ilp'
+file_pat_ilastik_loo_probabilities = fol_path_results / 'ilastik_loo_prob/{cropname}_Probabilities.tiff'
 
 fol_path_probab_all = fol_path_project / 'probabilities_all'
 
@@ -89,9 +92,14 @@ def loo_classifiers(wildcards):
     crop_names = training_crops(wildcards)
     return expand(file_pat_ilastik_loo_classifier, cropname=crop_names)
 
+def loo_probabilities(wildcards):
+    crop_names = training_crops(wildcards)
+    return expand(file_pat_ilastik_loo_probabilities, cropname=crop_names)
+
 rule all:
     input: fol_path_stack_ilastik, fol_path_ilastik_crops,
-         file_path_ilastik_all, fol_path_probab_all, loo_classifiers
+         file_path_ilastik_all, fol_path_probab_all, loo_classifiers,
+         loo_probabilities
     output: touch(has_all)
 
 
@@ -145,11 +153,14 @@ rule get_trained_classifier:
          fn_file_meta=file_path_img_meta
     params:
         glob_img=lambda wildcards: '"{basename}_x{x}_y{y}_w{w}_h{h}.h5"'
+    resources:
+             mem_mb=8000
     output:
         file_path_ilastik_all
     container: ilastik_container
     shell:
         """
+        LAZYFLOW_THREADS={threads} LAZYFLOW_TOTAL_RAM_MB={resources.mem_mb} \
         {ilastik_python} workflow/scripts/train_headless.py {output[0]}\
             {input.fol_imgs} \
             {input.fol_labels} \
@@ -162,18 +173,51 @@ rule get_trained_classifier:
 rule get_trained_loo_classifier:
     input: file_path_ilastik_all
     output: file_pat_ilastik_loo_classifier
+    threads: 4
+    resources:
+        mem_mb=4000
     params:
         file_name_crop = '{cropname}'
     container: ilastik_container
     shell:
          """
+         LAZYFLOW_THREADS={threads} LAZYFLOW_TOTAL_RAM_MB={resources.mem_mb} \
          {ilastik_python} workflow/scripts/loo_img_training.py \
             {input[0]} \
             "{params.file_name_crop}" \
             {output[0]}
          """
 
+rule apply_ilastik_loo:
+    input:
+         fn = file_pat_ilastik_crop,
+         project = file_pat_ilastik_loo_classifier
+    output:
+        file_pat_ilastik_loo_probabilities
 
+    container: ilastik_container
+    threads: 4
+    resources:
+        mem_mb = 8000
+    params:
+        bin_ilastik=ilastik_bin,
+        output_format='tiff',
+        output_filename= lambda wildcards: str(file_pat_ilastik_loo_probabilities).replace('cropname', 'nickname'),
+        export_source='Probabilities',
+        export_dtype='uint16',
+        export_drange='"[0, 65535]"',
+        pipeline_result_drange='"[0.0, 1.0]"'
+    shell:
+        'LAZYFLOW_THREADS={threads} LAZYFLOW_TOTAL_RAM_MB={resources.mem_mb} {params.bin_ilastik} '
+        '--headless --project={input.project} '
+        '--output_format={params.output_format} '
+        '--output_filename_format={params.output_filename} '
+        '--export_source={params.export_source} '
+        '--export_dtype={params.export_dtype} '
+        '--export_drange={params.export_drange} '
+        '--pipeline_result_drange={params.pipeline_result_drange} '
+        '--readonly 1 '
+        '{input.fn}'
 
 
 config_dict_cp = {
@@ -218,9 +262,9 @@ config_dict_ilastik = {
          'output_pattern':
          # Folder containing probability maps for segmentation
              directory(fol_path_probab_all)
-         }
+         },
 }
 
 define_cellprofiler_rules(config_dict_cp, fol_path_results, container_cp=cellprofiler_container)
 define_ilastik_rules(config_dict_ilastik, fol_path_results, threads=ilastik_threads,
-                     mem_mb=ilastik_mem_mb, container_ilastik=ilastik_container)
+                     mem_mb=ilastik_mem_mb, container_ilastik=ilastik_container, bin_ilastik=ilastik_bin)
