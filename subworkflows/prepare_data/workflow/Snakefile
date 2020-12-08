@@ -138,6 +138,5 @@ rule get_ome:
     output: directory(fol_path_ome)
     shell:
          """
-         mkdir {output[0]}
-         rsync -r {input[0]}/* {output[0]}
+         unzip {input[0]} -d {output[0]}
          """
