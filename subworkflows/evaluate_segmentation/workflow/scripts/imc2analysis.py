@@ -1,6 +1,5 @@
 import multiprocessing
 import pathlib
-import traceback
 
 import tifffile
 from imctools.converters import ome2analysis
@@ -38,9 +37,10 @@ if __name__ == '__main__':
                                                   metalcolumn=column_metal,
                                                   usedcolumn=column_used,
                                                   dtype='uint16')
-        except:
+        except Exception as e:
             print('Error in', path)
-            traceback.print_exc()
+            print(str(e))
+            return
 
 
     with multiprocessing.Pool(snakemake.threads) as pool:
