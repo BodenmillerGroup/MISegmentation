@@ -36,8 +36,8 @@ if __name__ == '__main__':
         dat_m_crops = pd.read_csv(fn_manual_coordinates)
         dat_crops['coord_origin'] = 'name'
         dat_m_crops['coord_origin'] = 'matching'
-        dat_crops = dat_crops.set_index('basename', drop=False)
-        dat_m_crops = dat_m_crops.set_index('basename', drop=False)
+        dat_crops = dat_crops.set_index('cropname', drop=False)
+        dat_m_crops = dat_m_crops.set_index('cropname', drop=False)
         dat_crops.update(dat_m_crops, overwrite=True)
     dat_crops[['x', 'y', 'w', 'h', 'use']] = dat_crops[['x', 'y', 'w', 'h', 'use']].astype(int)
     dat_crops.to_csv(sm.output.fn_cropmeta, index=False)
