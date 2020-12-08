@@ -64,16 +64,22 @@ subworkflow evaluate_hubmap:
     configfile:
               "config/config_evaluate_HubMAP2020.yml"
 
+subworkflow evaluate_ali:
+    workdir: '../subworkflows/evaluate_segmentation/'
+    snakefile:
+             "../subworkflows/evaluate_segmentation/workflow/Snakefile"
+    configfile:
+              "config/config_evaluate_Ali2020.yml"
+
 rule all:
-    input: prepare_hubmap('HubMAP2020/training_image_meta.csv'),
-           prepare_jackson('Jackson2020/training_image_meta.csv'),
-           prepare_damond('Damond2018/training_image_meta.csv'),
-           prepare_schulz('Schulz2017/training_image_meta.csv'),
-           prepare_ali('Ali2020/training_image_meta.csv'),
-           evaluate_hubmap('HubMAP2020/ilastik_crops'),
-           evaluate_hubmap('HubMAP2020/ilastik_trained_full.ilp'),
-           evaluate_damond('Damond2018/ilastik_trained_full.ilp'),
-           evaluate_schulz('Schulz2017/ilastik_trained_full.ilp'),
-           evaluate_jackson('Jackson2020/ilastik_trained_full.ilp')
+    input: evaluate_hubmap('HubMAP2020/all'),
+           evaluate_damond('Damond2018/all'),
+           evaluate_jackson('Jackson2020/all'),
+           evaluate_schulz('Schulz2017/all'),
+           evaluate_ali('Ali2020/all')
+
+         
+# rsync -rtu  . "vizano@cluster.s3it.uzh.ch:/scratch/vizano/MISegmentation" --progress --exclude=".*" --exclude="pkgs/" --exclude=".snakemake"
+
 
 
