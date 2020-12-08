@@ -142,12 +142,12 @@ def define_ilastik_rules(configs_ilastik, folder_base,
             mem_mb = fkt_resources_mem_mb
         params:
             bin_ilastik=bin_ilastik,
-            output_format=lambda wildcards: configs_ilastik[wildcards.batchname]['output_format'],
+            output_format=lambda wildcards: configs_ilastik[wildcards.batchname].get('output_format', "tiff"),
             output_filename=lambda wildcards: configs_ilastik[wildcards.batchname]['output_filename'],
-            export_source=lambda wildcards: configs_ilastik[wildcards.batchname]['export_source'],
-            export_dtype=lambda wildcards: configs_ilastik[wildcards.batchname]['export_dtype'],
-            export_drange=lambda wildcards: configs_ilastik[wildcards.batchname]['export_drange'],
-            pipeline_result_drange=lambda wildcards: configs_ilastik[wildcards.batchname]['pipeline_result_drange'],
+            export_source=lambda wildcards: configs_ilastik[wildcards.batchname].get('export_source', "Probabilities"),
+            export_dtype=lambda wildcards: configs_ilastik[wildcards.batchname].get('export_dtype', "uint16"),
+            export_drange=lambda wildcards: configs_ilastik[wildcards.batchname].get('export_drange', '"[0, 65535]"'),
+            pipeline_result_drange=lambda wildcards: configs_ilastik[wildcards.batchname].get('pipeline_result_drange', '"[0.0, 1.0]"'),
             fkt_fns = lambda wildcards: [f'"{fn}"' for fn in fkt_fns_run(wildcards)]
         shell:
             'LAZYFLOW_THREADS={threads} LAZYFLOW_TOTAL_RAM_MB={resources.mem_mb} {params.bin_ilastik} --headless --project={input.project} '
