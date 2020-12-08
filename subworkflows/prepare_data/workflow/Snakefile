@@ -3,6 +3,11 @@ import pandas as pd
 import re
 import shutil
 import pathlib
+
+from snakemake.remote.SFTP import RemoteProvider
+SFTP = RemoteProvider(username="vitoz",
+                      private_key="../../.ssh/id_rsa_sm")
+
 # The main entry point of your workflow.
 # After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
 
@@ -12,12 +17,14 @@ import pathlib
 #singularity: "docker://votti/miniconda3mamba:v0.4.2"
 conda: 'envs/env_base.yaml'
 
+def make_remote(path):
+    return SFTP.remote(f'172.23.56.187{str(path)}')
 # Input
 remote_fol_path_base= pathlib.Path(config['fol_path_base'])
-remote_file_path_ilp= remote_fol_path_base / config['fn_path_ilp']
-remote_file_path_panel= remote_fol_path_base / config['fn_path_panel']
-remote_fol_path_ome= remote_fol_path_base / config['fn_path_ome']
-remote_fol_path_cpproj = remote_fol_path_base / config['fn_path_cpproj']
+remote_file_path_ilp= make_remote(remote_fol_path_base / config['fn_path_ilp'])
+remote_file_path_panel= make_remote(remote_fol_path_base / config['fn_path_panel'])
+remote_fol_path_ome= make_remote(remote_fol_path_base / config['fn_path_ome'])
+remote_fol_path_cpproj = make_remote(remote_fol_path_base / config['fn_path_cpproj'])
 
 # Not used yet:
 remote_fol_path_atiffs= remote_fol_path_base / 'analysis'
