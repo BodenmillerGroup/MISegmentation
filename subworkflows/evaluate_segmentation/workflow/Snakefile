@@ -83,7 +83,7 @@ fol_path_probab_all = fol_path_project / 'probabilities_all'
 has_all = fol_path_project / 'all'
 
 def training_crops(wildcards):
-    checkpoints.cp_training_crops.get()
+    checkpoints.cp_training_crops.get(**wildcards)
     fn_pat = str(file_pat_ilastik_crop)
     crops, = glob_wildcards(fn_pat)
     return crops
@@ -108,7 +108,9 @@ checkpoint cp_training_crops:
     input:
         fol_path_ilastik_crops
     output:
-        touch('x')
+        temporary(fol_path_project / 'has_training_crops')
+    shell:
+        'touch {output[0]}'
 
 rule ome2analysis:
     input:
@@ -125,7 +127,10 @@ rule ome2analysis:
           suffix = '_{stack}',
           min_imgsize = lambda wildcards: config_stacks[wildcards.stack][
               'min_image_size']
-    threads: 32
+    threads: 8
+    resources:
+             mem_mb=8000,
+             time="80"
     script:
           'scripts/imc2analysis.py'
 
@@ -154,7 +159,8 @@ rule get_trained_classifier:
     params:
         glob_img=lambda wildcards: '"{basename}_x{x}_y{y}_w{w}_h{h}.h5"'
     resources:
-             mem_mb=8000
+             mem_mb=8000,
+             time="80"
     output:
         file_path_ilastik_all
     container: ilastik_container
@@ -185,7 +191,7 @@ rule get_trained_loo_classifier:
          {ilastik_python} workflow/scripts/loo_img_training.py \
             {input[0]} \
             "{params.file_name_crop}" \
-            {output[0]}
+            "{output[0]}"
          """
 
 rule apply_ilastik_loo:
@@ -209,7 +215,7 @@ rule apply_ilastik_loo:
         pipeline_result_drange='"[0.0, 1.0]"'
     shell:
         'LAZYFLOW_THREADS={threads} LAZYFLOW_TOTAL_RAM_MB={resources.mem_mb} {params.bin_ilastik} '
-        '--headless --project={input.project} '
+        '--headless --project="{input.project}" '
         '--output_format={params.output_format} '
         '--output_filename_format={params.output_filename} '
         '--export_source={params.export_source} '
@@ -217,7 +223,7 @@ rule apply_ilastik_loo:
         '--export_drange={params.export_drange} '
         '--pipeline_result_drange={params.pipeline_result_drange} '
         '--readonly 1 '
-        '{input.fn}'
+        '"{input.fn}"'
 
 
 config_dict_cp = {
