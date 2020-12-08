@@ -1,9 +1,9 @@
 ---
-fn_manual_crop_coordinates: manual_crop_coordinates.csv
+fn_manual_crop_coordinates: ../../resources/manual_crop_coordinates_Ali2020.csv
 fn_path_cpproj: dummy.cpproj
 fn_path_ilp: metabric_new_classifier_20180108.ilp
-fn_path_ome: dummy_ome
-fn_path_panel: panel.csv
+fn_path_ome: Ali2020_ome.zip
+fn_path_panel: metabric_panel_for_analysis_stacks.csv
 fol_path_base: /home/vitoz/Data/SegData/metabrik
 
 re_label_basic: (?P<cropname>.*)_label\.tiff
