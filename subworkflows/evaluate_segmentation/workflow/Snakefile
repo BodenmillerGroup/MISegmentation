@@ -50,7 +50,7 @@ config_stacks = {'ilastik': {'col_bool': csv_stack_ilastik,
                                      'min_image_size': 50}}
 
 fol_path_project = pathlib.Path(f"{project_id}")
-suffix_probablities ='_Probabilities'
+suffix_full_probablities = '_FullProbabilities'
 suffix_tiff = '.tiff'
 
 
@@ -76,9 +76,19 @@ fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
 fol_path_ilastik_crops = fol_path_results / 'crops_ilastik'
 file_pat_ilastik_crop = fol_path_ilastik_crops / '{cropname}.h5'
 file_pat_ilastik_loo_classifier = fol_path_results / 'loo_class/{cropname}.ilp'
-file_pat_ilastik_loo_probabilities = fol_path_results / 'loo_prob/{cropname}_Probabilities.tiff'
+file_pat_ilastik_loo_probabilities = fol_path_results / 'loo_prob/{cropname}_ProbabilitiesLoo.tiff'
 
 fol_path_probab_all = fol_path_project / 'probabilities_all'
+
+fol_path_seg_comparison = fol_path_project / 'segmentation_comparison'
+
+fol_pat_masks = fol_path_project / 'masks_{maskversion}'
+fol_pat_mask_labels = fol_path_project / 'masks_{maskversion}_labels'
+
+fol_path_all_masks = str(fol_pat_masks).format(maskversion='all')
+fol_path_loo_masks = str(fol_pat_masks).format(maskversion='loo')
+fol_path_all_masks_labels = str(fol_pat_mask_labels).format(maskversion='all')
+fol_path_loo_masks_labels = str(fol_pat_mask_labels).format(maskversion='loo')
 
 has_all = fol_path_project / 'all'
 
@@ -99,7 +109,7 @@ def loo_probabilities(wildcards):
 rule all:
     input: fol_path_stack_ilastik, fol_path_ilastik_crops,
          file_path_ilastik_all, fol_path_probab_all, loo_classifiers,
-         loo_probabilities
+         loo_probabilities, fol_path_loo_masks, fol_path_results, fol_path_seg_comparison
     output: touch(has_all)
 
 
@@ -149,6 +159,31 @@ rule crop_reproduction_input:
             fn_inp = fol_ilastik / f"{row['basename']}_ilastik.tiff"
             fn_out = fol_cropinput / f"{row['cropname']}.tiff"
             fn_out.symlink_to(fn_inp.resolve())
+
+rule get_mask_labels:
+    input:
+        fol_masks = str(fol_pat_masks),
+        fn_cropmeta = file_path_img_meta,
+        fol_labels = fol_path_labels
+    output:
+        fol_mask_labels = directory(str(fol_pat_mask_labels))
+    run:
+        fol_mask_labels = Path(output.fol_mask_labels)
+        fol_masks = Path(input.fol_masks)
+        fol_labels = Path(input.fol_labels[0])
+        dat_cropmeta = pd.read_csv(input.fn_cropmeta)
+        fol_mask_labels.mkdir()
+        fns_masks = [f.name for f in fol_masks.glob('*.tiff')]
+        for _, row in dat_cropmeta.iterrows():
+            basename = row['basename']
+            cropname = row['cropname']
+            prefix = '{basename}_x{x}_y{y}_w{w}_h{h}'.format(**dict(row))
+            for f in fns_masks:
+                if f.startswith(prefix):
+                    fn_inp = fol_labels / f"{cropname}_label.tiff"
+                    fn_out = fol_mask_labels / f.replace('.tiff', '_label.tiff')
+                    fn_out.symlink_to(fn_inp.resolve())
+
 
 rule get_trained_classifier:
     input:
@@ -226,6 +261,20 @@ rule apply_ilastik_loo:
         '"{input.fn}"'
 
 
+def get_seg_probabilities(name, input_list, output_folder):
+    dic = {
+        'message':  """\
+                    This will segment the ilastik probabilities.                
+                    """,
+        'run_size': 3,
+        'plugins': cp_plugins,
+        'pipeline': 'resources/2_segment_probabilities.cppipe',
+        'input_files': input_list,
+        'output_patterns': {'.':
+                                directory(output_folder)}
+    }
+    return {name: dic}
+
 config_dict_cp = {
         'ilastik_crops':
 {
@@ -245,10 +294,15 @@ config_dict_cp = {
         'output_patterns': {'.':
                             directory(fol_path_ilastik_crops)},
         'input_folder': prepare_data(str(fol_path_project))
-    }
-                 }
+    },
+    **get_seg_probabilities('seg_probab_all',
+                            input_list=[fol_path_probab_all],
+                            output_folder=fol_path_all_masks),
 
-config_dict_ilastik = {
+    **get_seg_probabilities('seg_probab_loo',
+                            input_list=[loo_probabilities],
+                            output_folder=fol_path_loo_masks),
+
     'all':
         {'message': """\
                     Runs ilastik classifier run on full dataset
@@ -256,7 +310,7 @@ config_dict_ilastik = {
          'project': str(file_path_ilastik_all),
          'run_size': 4,
          'output_format': 'tiff',
-         'output_filename': f'{{nickname}}{suffix_probablities}{suffix_tiff}',
+         'output_filename': f'{{nickname}}{suffix_full_probablities}{suffix_tiff}',
          'export_source': 'Probabilities',
          'export_dtype': 'uint16',
          'pipeline_result_drange': '"[0.0, 1.0]"',
@@ -269,6 +323,27 @@ config_dict_ilastik = {
          # Folder containing probability maps for segmentation
              directory(fol_path_probab_all)
          },
+}
+
+config_dict_ilastik = {
+    'evaluate_masks':
+        {
+            'message':  """\
+                        Evaluate masks using manual lablels
+                        """,
+            'run_size': 3,
+            'plugins': cp_plugins,
+            'pipeline': 'resources/3_evaluate_masks.cppipe',
+            'input_files': [
+                fol_path_all_masks,
+                fol_path_all_masks_labels,
+                fol_path_loo_masks,
+                fol_path_loo_masks_labels
+            ],
+            'output_patterns': {'.':
+                                    directory(fol_path_seg_comparison)},
+            'input_folder': prepare_data(str(fol_path_project))
+        },
 }
 
 define_cellprofiler_rules(config_dict_cp, fol_path_results, container_cp=cellprofiler_container)
