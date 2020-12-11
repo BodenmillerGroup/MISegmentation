@@ -2,7 +2,7 @@
 fn_manual_crop_coordinates: ../../resources/manual_crop_coordinates_Jackson2020.csv
 fn_path_cpproj: 20191211_analysis_HubMAP_LN_Spleen_thymus.cpproj
 fn_path_ilp: 20171130_pixelclassification_BaselZuri.ilp
-fn_path_ome: ome_all
+fn_path_ome: Jackson2020_ome.zip
 fn_path_panel: Basel_Zuri_StainingPanel.csv
 fol_path_base: /home/vitoz/Data/SegData/basel_zuri
 

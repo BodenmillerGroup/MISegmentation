@@ -2,7 +2,7 @@
 fn_manual_crop_coordinates: resources/manual_coordinates.csv
 fn_path_cpproj: 20191211_analysis_HubMAP_LN_Spleen_thymus.cpproj
 fn_path_ilp: HubMAP_20191211.ilp
-fn_path_ome: ometiff
+fn_path_ome: Hubmap2020_ome.zip
 fn_path_panel: 20191128_HubMAP.csv
 fol_path_base: /home/vitoz/Data/SegData/HuBMAP/20191211_analysis_HubMAP_LN_Spleen_thymus
 re_label_basic: (?P<cropname>.*)_label\.tiff

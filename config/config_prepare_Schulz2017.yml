@@ -2,7 +2,7 @@
 fn_manual_crop_coordinates: ../../resources/manual_crop_coordinates_Schulz2017.csv
 fn_path_cpproj: 20170116_Her2_TMA_2_expand_and_propagate_comparison.cpproj
 fn_path_ilp: 20161212_Her2_TMA_2.ilp
-fn_path_ome: analysis/ometiffs_corr
+fn_path_ome: Schulz2017_ome.zip
 fn_path_panel: panel.csv
 fol_path_base: /home/vitoz/Data/SegData/Her2_TMA
 
