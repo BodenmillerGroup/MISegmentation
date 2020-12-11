@@ -47,6 +47,8 @@ project_id = config['project_id']
 csv_metal = config['csv_metal']
 csv_stack_ilastik = config['csv_stack_ilastik']
 config_stacks = {'ilastik': {'col_bool': csv_stack_ilastik,
+                                     'min_image_size': 50},
+                 'nuclear': {'col_bool': 'nuclear',
                                      'min_image_size': 50}}
 
 fol_path_project = pathlib.Path(f"{project_id}")
@@ -73,22 +75,28 @@ file_path_feature_matrix=prepare_data(str(fol_path_project / 'feature_matrix.txt
 file_path_ilastik_all = fol_path_project / 'ilastik_trained_full.ilp'
 fol_pat_stack = fol_path_results / 'stacks_{stack}'
 fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
-fol_path_ilastik_crops = fol_path_results / 'crops_ilastik'
+fol_path_stack_nuclear = str(fol_pat_stack).format(**{'stack': 'nuclear'})
+fol_path_ilastik_crops = fol_path_results / 'crops_h5_ilastik'
+fol_path_ilastik_tiff_crops = fol_path_results / 'crops_tiff_ilastik'
+fol_path_nuclear_tiff_crops = fol_path_results / 'crops_tiff_nuclear'
+
 file_pat_ilastik_crop = fol_path_ilastik_crops / '{cropname}.h5'
 file_pat_ilastik_loo_classifier = fol_path_results / 'loo_class/{cropname}.ilp'
 file_pat_ilastik_loo_probabilities = fol_path_results / 'loo_prob/{cropname}_ProbabilitiesLoo.tiff'
 
 fol_path_probab_all = fol_path_project / 'probabilities_all'
 
-fol_path_seg_comparison = fol_path_project / 'segmentation_comparison'
 
 fol_pat_masks = fol_path_project / 'masks_{maskversion}'
 fol_pat_mask_labels = fol_path_project / 'masks_{maskversion}_labels'
+fol_path_seg_comparison = fol_path_project / 'seg_comparison'
 
 fol_path_all_masks = str(fol_pat_masks).format(maskversion='all')
 fol_path_loo_masks = str(fol_pat_masks).format(maskversion='loo')
+fol_path_basic_masks = str(fol_pat_masks).format(maskversion='basic')
 fol_path_all_masks_labels = str(fol_pat_mask_labels).format(maskversion='all')
 fol_path_loo_masks_labels = str(fol_pat_mask_labels).format(maskversion='loo')
+fol_path_basic_masks_labels = str(fol_pat_mask_labels).format(maskversion='basic')
 
 has_all = fol_path_project / 'all'
 
@@ -107,9 +115,7 @@ def loo_probabilities(wildcards):
     return expand(file_pat_ilastik_loo_probabilities, cropname=crop_names)
 
 rule all:
-    input: fol_path_stack_ilastik, fol_path_ilastik_crops,
-         file_path_ilastik_all, fol_path_probab_all, loo_classifiers,
-         loo_probabilities, fol_path_loo_masks, fol_path_results, fol_path_seg_comparison
+    input: fol_path_seg_comparison
     output: touch(has_all)
 
 
@@ -147,17 +153,23 @@ rule ome2analysis:
 rule crop_reproduction_input:
     input:
         fol_ilastik=fol_path_stack_ilastik,
+        fol_nuclear=fol_path_stack_nuclear,
         fn_cropmeta=file_path_img_meta
     output:
         fol_cropinput=directory(fol_path_ilastik_cropinput)
     run:
         fol_cropinput = Path(output.fol_cropinput)
         fol_ilastik = Path(input.fol_ilastik)
+        fol_nuclear = Path(input.fol_nuclear)
+
         dat_cropmeta = pd.read_csv(input.fn_cropmeta)
         fol_cropinput.mkdir()
         for _, row in dat_cropmeta.iterrows():
             fn_inp = fol_ilastik / f"{row['basename']}_ilastik.tiff"
-            fn_out = fol_cropinput / f"{row['cropname']}.tiff"
+            fn_out = fol_cropinput / f"{row['cropname']}_ilastik.tiff"
+            fn_out.symlink_to(fn_inp.resolve())
+            fn_inp = fol_nuclear / f"{row['basename']}_nuclear.tiff"
+            fn_out = fol_cropinput / f"{row['cropname']}_nuclear.tiff"
             fn_out.symlink_to(fn_inp.resolve())
 
 rule get_mask_labels:
@@ -276,7 +288,7 @@ def get_seg_probabilities(name, input_list, output_folder):
     return {name: dic}
 
 config_dict_cp = {
-        'ilastik_crops':
+        'crop_images':
 {
         'message':  """\
                     Prepare ilastik crops
@@ -291,10 +303,26 @@ config_dict_cp = {
             fol_path_ilastik_cropinput,
             file_path_img_meta
         ],
-        'output_patterns': {'.':
-                            directory(fol_path_ilastik_crops)},
+        'output_patterns': {'ilastik_h5':
+                            directory(fol_path_ilastik_crops),
+                            'ilastik_tiff':
+                            directory(fol_path_ilastik_tiff_crops),
+                            'nuclear_tiff':
+                            directory(fol_path_nuclear_tiff_crops)},
         'input_folder': prepare_data(str(fol_path_project))
     },
+    'segment_basic': {
+              'message':  """\
+                    This will segment the nuclear channels             
+                    """,
+              'run_size': 3,
+              'plugins': cp_plugins,
+              'pipeline': 'resources/2_segment_basic.cppipe',
+              'input_files': [fol_path_nuclear_tiff_crops,
+                              fol_path_ilastik_tiff_crops],
+              'output_patterns': {'.':
+                                      directory(fol_path_basic_masks)}
+          },
     **get_seg_probabilities('seg_probab_all',
                             input_list=[fol_path_probab_all],
                             output_folder=fol_path_all_masks),
@@ -303,6 +331,30 @@ config_dict_cp = {
                             input_list=[loo_probabilities],
                             output_folder=fol_path_loo_masks),
 
+
+    'evaluate_masks':
+        {
+            'message':  """\
+                        Evaluate masks using manual labels
+                        """,
+            'run_size': 3,
+            'plugins': cp_plugins,
+            'pipeline': 'resources/3_evaluate_masks.cppipe',
+            'input_files': [
+                fol_path_all_masks,
+                fol_path_all_masks_labels,
+                fol_path_loo_masks,
+                fol_path_loo_masks_labels,
+                fol_path_basic_masks,
+                fol_path_basic_masks_labels
+            ],
+            'output_patterns': {'.':
+                                    directory(fol_path_seg_comparison)},
+            'input_folder': prepare_data(str(fol_path_project))
+        },
+}
+
+config_dict_ilastik = {
     'all':
         {'message': """\
                     Runs ilastik classifier run on full dataset
@@ -323,27 +375,6 @@ config_dict_cp = {
          # Folder containing probability maps for segmentation
              directory(fol_path_probab_all)
          },
-}
-
-config_dict_ilastik = {
-    'evaluate_masks':
-        {
-            'message':  """\
-                        Evaluate masks using manual lablels
-                        """,
-            'run_size': 3,
-            'plugins': cp_plugins,
-            'pipeline': 'resources/3_evaluate_masks.cppipe',
-            'input_files': [
-                fol_path_all_masks,
-                fol_path_all_masks_labels,
-                fol_path_loo_masks,
-                fol_path_loo_masks_labels
-            ],
-            'output_patterns': {'.':
-                                    directory(fol_path_seg_comparison)},
-            'input_folder': prepare_data(str(fol_path_project))
-        },
 }
 
 define_cellprofiler_rules(config_dict_cp, fol_path_results, container_cp=cellprofiler_container)
