@@ -89,7 +89,7 @@ def define_cellprofiler_rules(configs_cp, folder_base,
                 # output
                 inp = inp(wildcards)
             if (isinstance(inp, str) | isinstance(inp, pathlib.Path)):
-                # If it is neither a string or a path
+                # If it is either a string or a path
                 # convert it to a list
                 inp = [inp]
             return_list += inp
