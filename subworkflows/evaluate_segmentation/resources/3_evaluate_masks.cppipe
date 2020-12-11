@@ -347,7 +347,7 @@ SaveImages:[module_num:28|svn_version:'Unknown'|variable_revision_number:15|show
     Append a suffix to the image file name?:Yes
     Text to append to the image name:_dist
     Saved file format:tiff
-    Output file location:Default Output Folder|
+    Output file location:Default Output Folder sub-folder|dists
     Image bit depth:16-bit integer
     Overwrite existing files without warning?:No
     When to save:Every cycle
