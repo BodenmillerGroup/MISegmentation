@@ -2,7 +2,7 @@
 fn_manual_crop_coordinates: manual_crop_coordinates.csv
 fn_path_cpproj: 20191211_analysis_HubMAP_LN_Spleen_thymus.cpproj
 fn_path_ilp: CM2017_cells_NEW.ilp
-fn_path_ome: Damond2017_ome.zip
+fn_path_ome: Damond2018_ome.zip
 fn_path_panel: CM_Panel.csv
 fol_path_base: /home/vitoz/Data/SegData/CM2017
 
