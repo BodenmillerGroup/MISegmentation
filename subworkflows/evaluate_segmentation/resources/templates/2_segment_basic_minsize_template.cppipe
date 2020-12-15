@@ -155,11 +155,11 @@ IdentifySecondaryObjects:[module_num:11|svn_version:'Unknown'|variable_revision_
     Threshold strategy:Global
     Thresholding method:Otsu
     Threshold smoothing scale:1.3488
-    Threshold correction factor:0.75
+    Threshold correction factor:0.25
     Lower and upper bounds on threshold:0.0, 1.0
     Manual threshold:0.0
     Select the measurement to threshold with:None
-    Two-class or three-class thresholding?:Two classes
+    Two-class or three-class thresholding?:Three classes
     Assign pixels in the middle intensity class to the foreground or the background?:Foreground
     Size of adaptive window:10
     Lower outlier fraction:0.05
