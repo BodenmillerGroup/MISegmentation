@@ -42,6 +42,5 @@ if __name__ == '__main__':
             print(str(e))
             return
 
-
     with multiprocessing.Pool(snakemake.threads) as pool:
         pool.map(convert_img, pathlib.Path(fol_ome).rglob('*.ome.tiff'))
