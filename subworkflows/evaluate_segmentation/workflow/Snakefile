@@ -100,6 +100,17 @@ fol_path_basic_masks_labels = str(fol_pat_mask_labels).format(maskversion='basic
 
 has_all = fol_path_project / 'all'
 
+# segmentation pipelines
+fn_pat_segment = 'resources/2_segment_{segpipe}.cppipe'
+fn_pat_segment_minsize_temp = 'resources/templates/2_segment_{segpipe}_minsize_template.cppipe'
+fn_pat_segment_minsize = 'resources/2_segment_{segpipe}_minsize_{minsize}.cppipe'
+seg_minsizes = list(range(2,14,2))
+
+# do all the masks and labels
+masknames = [f'{grp}-minsize-{ms}' for grp in ['all', 'loo', 'basic'] for ms in seg_minsizes ]
+fns_masks = [str(fol_pat_masks).format(maskversion=m) for m in masknames]
+fns_masks_labels = [str(fol_pat_mask_labels).format(maskversion=m) for m in masknames]
+
 def training_crops(wildcards):
     checkpoints.cp_training_crops.get(**wildcards)
     fn_pat = str(file_pat_ilastik_crop)
@@ -273,19 +284,34 @@ rule apply_ilastik_loo:
         '"{input.fn}"'
 
 
-def get_seg_probabilities(name, input_list, output_folder):
+
+
+def get_seg_mask_pipe(name, input_list, output_folder,
+                      pipeline=str(fn_pat_segment).format(segpipe='probabilities')):
     dic = {
         'message':  """\
                     This will segment the ilastik probabilities.                
                     """,
         'run_size': 3,
         'plugins': cp_plugins,
-        'pipeline': 'resources/2_segment_probabilities.cppipe',
+        'pipeline': pipeline,
         'input_files': input_list,
         'output_patterns': {'.':
                                 directory(output_folder)}
     }
     return {name: dic}
+
+rule adapt_segmentation_minsize:
+    input: fn_pat_segment_minsize_temp
+    output: fn_pat_segment_minsize
+    run:
+        minsize = wildcards.minsize
+        with open(input[0], 'r') as f:
+            old_pipe = f.read()
+        new_pipe = old_pipe.replace('{minsize}', str(minsize))
+
+        with open(output[0], 'w') as f:
+            f.write(new_pipe)
 
 config_dict_cp = {
         'crop_images':
@@ -311,26 +337,36 @@ config_dict_cp = {
                             directory(fol_path_nuclear_tiff_crops)},
         'input_folder': prepare_data(str(fol_path_project))
     },
-    'segment_basic': {
-              'message':  """\
-                    This will segment the nuclear channels             
-                    """,
-              'run_size': 3,
-              'plugins': cp_plugins,
-              'pipeline': 'resources/2_segment_basic.cppipe',
-              'input_files': [fol_path_nuclear_tiff_crops,
+    **get_seg_mask_pipe('seg_probab_all',
+                        input_list=[fol_path_probab_all],
+                        output_folder=fol_path_all_masks),
+    **{k: v for d in  [get_seg_mask_pipe(f'seg_probab_all_minsize_{ms}',
+                        input_list=[fol_path_probab_all],
+                        output_folder=str(fol_pat_masks).format(maskversion=f'all-minsize-{ms}'),
+                        pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities',
+                                                               minsize=ms))
+                       for ms in seg_minsizes ] for k, v in d.items()},
+    **get_seg_mask_pipe('seg_probab_loo',
+                        input_list=[loo_probabilities],
+                        output_folder=fol_path_loo_masks),
+
+    **{k: v for d in [get_seg_mask_pipe(f'seg_probab_loo_minsize_{ms}',
+                        input_list=[loo_probabilities],
+                        output_folder=str(fol_pat_masks).format(maskversion=f'loo-minsize-{ms}'),
+                        pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities', minsize=ms))
+                        for ms in seg_minsizes] for k, v in d.items()},
+
+    **get_seg_mask_pipe('segment_basic',
+                        input_list=[fol_path_nuclear_tiff_crops,
                               fol_path_ilastik_tiff_crops],
-              'output_patterns': {'.':
-                                      directory(fol_path_basic_masks)}
-          },
-    **get_seg_probabilities('seg_probab_all',
-                            input_list=[fol_path_probab_all],
-                            output_folder=fol_path_all_masks),
-
-    **get_seg_probabilities('seg_probab_loo',
-                            input_list=[loo_probabilities],
-                            output_folder=fol_path_loo_masks),
-
+                        output_folder=fol_path_basic_masks,
+                        pipeline=str(fn_pat_segment).format(segpipe='basic')),
+    **{k: v for d in [get_seg_mask_pipe(f'seg_probab_basic_minsize_{ms}',
+                        input_list=[fol_path_nuclear_tiff_crops,
+                              fol_path_ilastik_tiff_crops],
+                        output_folder=str(fol_pat_masks).format(maskversion=f'basic-minsize-{ms}'),
+                        pipeline=str(fn_pat_segment_minsize).format(segpipe='basic', minsize=ms))
+                        for ms in seg_minsizes ] for k, v in d.items()},
 
     'evaluate_masks':
         {
@@ -340,14 +376,7 @@ config_dict_cp = {
             'run_size': 3,
             'plugins': cp_plugins,
             'pipeline': 'resources/3_evaluate_masks.cppipe',
-            'input_files': [
-                fol_path_all_masks,
-                fol_path_all_masks_labels,
-                fol_path_loo_masks,
-                fol_path_loo_masks_labels,
-                fol_path_basic_masks,
-                fol_path_basic_masks_labels
-            ],
+            'input_files': fns_masks + fns_masks_labels,
             'output_patterns': {'.':
                                     directory(fol_path_seg_comparison)},
             'input_folder': prepare_data(str(fol_path_project))
@@ -376,6 +405,7 @@ config_dict_ilastik = {
              directory(fol_path_probab_all)
          },
 }
+
 
 define_cellprofiler_rules(config_dict_cp, fol_path_results, container_cp=cellprofiler_container)
 define_ilastik_rules(config_dict_ilastik, fol_path_results, threads=ilastik_threads,
