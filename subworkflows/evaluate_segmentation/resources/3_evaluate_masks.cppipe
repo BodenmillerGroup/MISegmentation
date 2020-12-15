@@ -2,7 +2,7 @@ CellProfiler Pipeline: http://www.cellprofiler.org
 Version:5
 DateRevision:406
 GitHash:
-ModuleCount:29
+ModuleCount:23
 HasImagePlaneDetails:False
 
 Images:[module_num:1|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:['Select again all the files in the `tiff` folder']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
@@ -59,142 +59,7 @@ Groups:[module_num:4|svn_version:'Unknown'|variable_revision_number:2|show_windo
     grouping metadata count:1
     Metadata category:Site
 
-Threshold:[module_num:5|svn_version:'Unknown'|variable_revision_number:11|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
-    Select the input image:label
-    Name the output image:bg_border_center
-    Threshold strategy:Global
-    Thresholding method:Manual
-    Threshold smoothing scale:0.0
-    Threshold correction factor:1.0
-    Lower and upper bounds on threshold:0.0,1.0
-    Manual threshold:0.0039
-    Select the measurement to threshold with:None
-    Two-class or three-class thresholding?:Two classes
-    Assign pixels in the middle intensity class to the foreground or the background?:Foreground
-    Size of adaptive window:50
-    Lower outlier fraction:0.05
-    Upper outlier fraction:0.05
-    Averaging method:Mean
-    Variance method:Standard deviation
-    # of deviations:2.0
-    Thresholding method:Minimum Cross-Entropy
-
-Threshold:[module_num:6|svn_version:'Unknown'|variable_revision_number:11|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
-    Select the input image:label
-    Name the output image:bg_border
-    Threshold strategy:Global
-    Thresholding method:Manual
-    Threshold smoothing scale:0.0
-    Threshold correction factor:1.0
-    Lower and upper bounds on threshold:0.0,1.0
-    Manual threshold:0.0078
-    Select the measurement to threshold with:None
-    Two-class or three-class thresholding?:Two classes
-    Assign pixels in the middle intensity class to the foreground or the background?:Foreground
-    Size of adaptive window:50
-    Lower outlier fraction:0.05
-    Upper outlier fraction:0.05
-    Averaging method:Mean
-    Variance method:Standard deviation
-    # of deviations:2.0
-    Thresholding method:Minimum Cross-Entropy
-
-Threshold:[module_num:7|svn_version:'Unknown'|variable_revision_number:11|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
-    Select the input image:label
-    Name the output image:bg
-    Threshold strategy:Global
-    Thresholding method:Manual
-    Threshold smoothing scale:0.0
-    Threshold correction factor:1.0
-    Lower and upper bounds on threshold:0.0,1.0
-    Manual threshold:0.0117
-    Select the measurement to threshold with:None
-    Two-class or three-class thresholding?:Two classes
-    Assign pixels in the middle intensity class to the foreground or the background?:Foreground
-    Size of adaptive window:50
-    Lower outlier fraction:0.05
-    Upper outlier fraction:0.05
-    Averaging method:Mean
-    Variance method:Standard deviation
-    # of deviations:2.0
-    Thresholding method:Minimum Cross-Entropy
-
-ImageMath:[module_num:8|svn_version:'Unknown'|variable_revision_number:5|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
-    Operation:Subtract
-    Raise the power of the result by:1.0
-    Multiply the result by:1.0
-    Add to result:0.0
-    Set values less than 0 equal to 0?:Yes
-    Set values greater than 1 equal to 1?:Yes
-    Replace invalid values with 0?:Yes
-    Ignore the image masks?:No
-    Name the output image:center
-    Image or measurement?:Image
-    Select the first image:bg_border_center
-    Multiply the first image by:1.0
-    Measurement:
-    Image or measurement?:Image
-    Select the second image:bg_border
-    Multiply the second image by:1.0
-    Measurement:
-
-ImageMath:[module_num:9|svn_version:'Unknown'|variable_revision_number:5|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
-    Operation:Subtract
-    Raise the power of the result by:1.0
-    Multiply the result by:1.0
-    Add to result:0.0
-    Set values less than 0 equal to 0?:Yes
-    Set values greater than 1 equal to 1?:Yes
-    Replace invalid values with 0?:Yes
-    Ignore the image masks?:No
-    Name the output image:border
-    Image or measurement?:Image
-    Select the first image:bg_border
-    Multiply the first image by:1.0
-    Measurement:
-    Image or measurement?:Image
-    Select the second image:bg
-    Multiply the second image by:1.0
-    Measurement:
-
-StackImages:[module_num:10|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
-    Name the output image:label_stack
-    Hidden:3
-    Image name:center
-    Image name:border
-    Image name:bg
-
-TransformBinary:[module_num:11|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
-    Select the input image:label_stack
-    Name the transformed image:label_dist
-
-RescaleIntensity:[module_num:12|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
-    Select the input image:label_dist
-    Name the output image:label_dist_int
-    Rescaling method:Divide each image by the same value
-    Method to calculate the minimum intensity:Custom
-    Method to calculate the maximum intensity:Custom
-    Lower intensity limit for the input image:0.0
-    Upper intensity limit for the input image:1.0
-    Intensity range for the input image:0.0,1.0
-    Intensity range for the output image:0.0,1.0
-    Select image to match in maximum intensity:None
-    Divisor value:65536
-    Divisor measurement:None
-
-Resize:[module_num:13|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:False|wants_pause:False]
-    Select the input image:label_dist_int
-    Name the output image:label_dist_int_1x
-    Resizing method:Resize by a fraction or multiple of the original size
-    Resizing factor:0.5
-    Width of the final image:100
-    Height of the final image:100
-    Interpolation method:Bilinear
-    Method to specify the dimensions:Manual
-    Select the image with the desired dimensions:None
-    Additional image count:0
-
-ConvertImageToObjects:[module_num:14|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+ConvertImageToObjects:[module_num:5|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:LabelImg
     Name the output object:Label
     Convert to boolean image:No
@@ -202,7 +67,7 @@ ConvertImageToObjects:[module_num:14|svn_version:'Unknown'|variable_revision_num
     Background label:0
     Connectivity:2
 
-Resize:[module_num:15|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+Resize:[module_num:6|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Mask
     Name the output image:MaskImg2x
     Resizing method:Resize by a fraction or multiple of the original size
@@ -214,7 +79,7 @@ Resize:[module_num:15|svn_version:'Unknown'|variable_revision_number:4|show_wind
     Select the image with the desired dimensions:None
     Additional image count:0
 
-ConvertImageToObjects:[module_num:16|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+ConvertImageToObjects:[module_num:7|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:MaskImg2x
     Name the output object:Mask2x
     Convert to boolean image:No
@@ -222,30 +87,30 @@ ConvertImageToObjects:[module_num:16|svn_version:'Unknown'|variable_revision_num
     Background label:0
     Connectivity:0
 
-ExpandOrShrinkObjects:[module_num:17|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+ExpandOrShrinkObjects:[module_num:8|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input objects:Mask2x
     Name the output objects:Mask2xBorder
     Select the operation:Shrink objects by a specified number of pixels
     Number of pixels by which to expand or shrink:1
     Fill holes in objects so that all objects shrink to a single point?:No
 
-ConvertObjectsToImage:[module_num:18|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+ConvertObjectsToImage:[module_num:9|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input objects:Mask2xBorder
     Name the output image:Mask2xBorderImg
     Select the color format:Binary (black & white)
     Select the colormap:Default
 
-ConvertObjectsToImage:[module_num:19|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+ConvertObjectsToImage:[module_num:10|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input objects:Mask2x
     Name the output image:Mask2xImg
     Select the color format:uint16
     Select the colormap:Default
 
-TransformBinary:[module_num:20|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+TransformBinary:[module_num:11|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:Mask2xBorderImg
     Name the transformed image:MaskDistance
 
-RescaleIntensity:[module_num:21|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+RescaleIntensity:[module_num:12|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the input image:MaskDistance
     Name the output image:MaskDistanceRescaled
     Rescaling method:Divide each image by the same value
@@ -259,16 +124,117 @@ RescaleIntensity:[module_num:21|svn_version:'Unknown'|variable_revision_number:3
     Divisor value:65535
     Divisor measurement:None
 
-MeasureObjectIntensity:[module_num:22|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+MeasureObjectIntensity:[module_num:13|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select images to measure:LabelImg, MaskDistance, MaskDistanceRescaled
     Select objects to measure:Label
 
-MeasureObjectSizeShape:[module_num:23|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+MeasureObjectSizeShape:[module_num:14|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select object sets to measure:Label, Mask2x
     Calculate the Zernike features?:No
     Calculate the advanced features?:No
 
-ExportToSpreadsheet:[module_num:24|svn_version:'Unknown'|variable_revision_number:13|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+ConvertObjectsToImage:[module_num:15|svn_version:'Unknown'|variable_revision_number:1|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input objects:Label
+    Name the output image:LabelObjImg
+    Select the color format:uint16
+    Select the colormap:Default
+
+SaveImages:[module_num:16|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the type of image to save:Image
+    Select the image to save:LabelImg
+    Select method for constructing file names:From image filename
+    Select image name for file prefix:LabelImg
+    Enter single file name:OrigBlue
+    Number of digits:4
+    Append a suffix to the image file name?:No
+    Text to append to the image name:
+    Saved file format:tiff
+    Output file location:Default Output Folder sub-folder|imgs
+    Image bit depth:16-bit integer
+    Overwrite existing files without warning?:No
+    When to save:Every cycle
+    Record the file and path information to the saved image?:Yes
+    Create subfolders in the output folder?:No
+    Base image folder:Elsewhere...|
+    How to save the series:T (Time)
+
+SaveImages:[module_num:17|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the type of image to save:Image
+    Select the image to save:Mask2xImg
+    Select method for constructing file names:From image filename
+    Select image name for file prefix:Mask
+    Enter single file name:OrigBlue
+    Number of digits:4
+    Append a suffix to the image file name?:No
+    Text to append to the image name:
+    Saved file format:tiff
+    Output file location:Default Output Folder sub-folder|masks
+    Image bit depth:16-bit integer
+    Overwrite existing files without warning?:No
+    When to save:Every cycle
+    Record the file and path information to the saved image?:Yes
+    Create subfolders in the output folder?:No
+    Base image folder:Elsewhere...|
+    How to save the series:T (Time)
+
+SaveImages:[module_num:18|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the type of image to save:Image
+    Select the image to save:LabelObjImg
+    Select method for constructing file names:From image filename
+    Select image name for file prefix:LabelImg
+    Enter single file name:OrigBlue
+    Number of digits:4
+    Append a suffix to the image file name?:No
+    Text to append to the image name:
+    Saved file format:tiff
+    Output file location:Default Output Folder sub-folder|masks
+    Image bit depth:16-bit integer
+    Overwrite existing files without warning?:No
+    When to save:Every cycle
+    Record the file and path information to the saved image?:Yes
+    Create subfolders in the output folder?:No
+    Base image folder:Elsewhere...|
+    How to save the series:T (Time)
+
+SaveImages:[module_num:19|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the type of image to save:Image
+    Select the image to save:MaskDistanceRescaled
+    Select method for constructing file names:From image filename
+    Select image name for file prefix:Mask
+    Enter single file name:OrigBlue
+    Number of digits:4
+    Append a suffix to the image file name?:Yes
+    Text to append to the image name:_dist
+    Saved file format:tiff
+    Output file location:Default Output Folder sub-folder|imgs
+    Image bit depth:16-bit integer
+    Overwrite existing files without warning?:No
+    When to save:Every cycle
+    Record the file and path information to the saved image?:Yes
+    Create subfolders in the output folder?:No
+    Base image folder:Elsewhere...|
+    How to save the series:T (Time)
+
+SaveImages:[module_num:20|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the type of image to save:Image
+    Select the image to save:Mask2xBorderImg
+    Select method for constructing file names:From image filename
+    Select image name for file prefix:Mask
+    Enter single file name:OrigBlue
+    Number of digits:4
+    Append a suffix to the image file name?:Yes
+    Text to append to the image name:_border
+    Saved file format:tiff
+    Output file location:Default Output Folder sub-folder|imgs
+    Image bit depth:16-bit integer
+    Overwrite existing files without warning?:No
+    When to save:Every cycle
+    Record the file and path information to the saved image?:Yes
+    Create subfolders in the output folder?:No
+    Base image folder:Elsewhere...|
+    How to save the series:T (Time)
+
+ExportToSpreadsheet:[module_num:21|svn_version:'Unknown'|variable_revision_number:13|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Select the column delimiter:Comma (",")
     Add image metadata columns to your object data file?:No
     Add image file and folder names to your object data file?:No
@@ -292,71 +258,14 @@ ExportToSpreadsheet:[module_num:24|svn_version:'Unknown'|variable_revision_numbe
     File name:DATA.csv
     Use the object name for the file name?:Yes
 
-ExportVarCsv:[module_num:25|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+ExportVarCsv:[module_num:22|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Output file location:Default Output Folder|
     Add a prefix to file names?:No
     Filename prefix:var_
     Overwrite existing files without warning?:No
     Extraction method count:0
 
-SaveImages:[module_num:26|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
-    Select the type of image to save:Image
-    Select the image to save:LabelImg
-    Select method for constructing file names:From image filename
-    Select image name for file prefix:LabelImg
-    Enter single file name:OrigBlue
-    Number of digits:4
-    Append a suffix to the image file name?:No
-    Text to append to the image name:
-    Saved file format:tiff
-    Output file location:Default Output Folder sub-folder|labels
-    Image bit depth:16-bit integer
-    Overwrite existing files without warning?:No
-    When to save:Every cycle
-    Record the file and path information to the saved image?:No
-    Create subfolders in the output folder?:No
-    Base image folder:Elsewhere...|
-    How to save the series:T (Time)
-
-SaveImages:[module_num:27|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
-    Select the type of image to save:Image
-    Select the image to save:Mask2xImg
-    Select method for constructing file names:From image filename
-    Select image name for file prefix:Mask
-    Enter single file name:OrigBlue
-    Number of digits:4
-    Append a suffix to the image file name?:No
-    Text to append to the image name:
-    Saved file format:tiff
-    Output file location:Default Output Folder sub-folder|masks
-    Image bit depth:16-bit integer
-    Overwrite existing files without warning?:No
-    When to save:Every cycle
-    Record the file and path information to the saved image?:No
-    Create subfolders in the output folder?:No
-    Base image folder:Elsewhere...|
-    How to save the series:T (Time)
-
-SaveImages:[module_num:28|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
-    Select the type of image to save:Image
-    Select the image to save:MaskDistanceRescaled
-    Select method for constructing file names:From image filename
-    Select image name for file prefix:Mask
-    Enter single file name:OrigBlue
-    Number of digits:4
-    Append a suffix to the image file name?:Yes
-    Text to append to the image name:_dist
-    Saved file format:tiff
-    Output file location:Default Output Folder sub-folder|dists
-    Image bit depth:16-bit integer
-    Overwrite existing files without warning?:No
-    When to save:Every cycle
-    Record the file and path information to the saved image?:No
-    Create subfolders in the output folder?:No
-    Base image folder:Elsewhere...|
-    How to save the series:T (Time)
-
-CreateBatchFiles:[module_num:29|svn_version:'Unknown'|variable_revision_number:8|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+CreateBatchFiles:[module_num:23|svn_version:'Unknown'|variable_revision_number:8|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
     Store batch files in default output folder?:Yes
     Output folder path:/mnt/f2160748-a937-44bd-aca8-3adb8a839612/Data/Analysis/cp4_segmentation_example/cpout
     Are the cluster computers running Windows?:No
