@@ -49,7 +49,12 @@ csv_stack_ilastik = config['csv_stack_ilastik']
 config_stacks = {'ilastik': {'col_bool': csv_stack_ilastik,
                                      'min_image_size': 50},
                  'nuclear': {'col_bool': 'nuclear',
-                                     'min_image_size': 50}}
+                                     'min_image_size': 50},
+                 'full': {'col_bool': 'full',
+                             'min_image_size': 50},
+                 'membrane': {'col_bool': 'membrane',
+                             'min_image_size': 50},
+                 }
 
 fol_path_project = pathlib.Path(f"{project_id}")
 suffix_full_probablities = '_FullProbabilities'
@@ -76,9 +81,13 @@ file_path_ilastik_all = fol_path_project / 'ilastik_trained_full.ilp'
 fol_pat_stack = fol_path_results / 'stacks_{stack}'
 fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
 fol_path_stack_nuclear = str(fol_pat_stack).format(**{'stack': 'nuclear'})
+fol_path_stack_full = str(fol_pat_stack).format(**{'stack': 'full'})
+fol_path_stack_membrane = str(fol_pat_stack).format(**{'stack': 'membrane'})
 fol_path_ilastik_crops = fol_path_results / 'crops_h5_ilastik'
 fol_path_ilastik_tiff_crops = fol_path_results / 'crops_tiff_ilastik'
 fol_path_nuclear_tiff_crops = fol_path_results / 'crops_tiff_nuclear'
+fol_path_full_tiff_crops = fol_path_results / 'crops_tiff_full'
+fol_path_membrane_tiff_crops = fol_path_results / 'crops_tiff_membrane'
 
 file_pat_ilastik_crop = fol_path_ilastik_crops / '{cropname}.h5'
 file_pat_ilastik_loo_classifier = fol_path_results / 'loo_class/{cropname}.ilp'
@@ -126,10 +135,9 @@ def loo_probabilities(wildcards):
     return expand(file_pat_ilastik_loo_probabilities, cropname=crop_names)
 
 rule all:
-    input: fol_path_seg_comparison
+    input: fol_path_seg_comparison, fol_path_stack_full, fol_path_stack_membrane,
+            fol_path_full_tiff_crops, fol_path_membrane_tiff_crops
     output: touch(has_all)
-
-
 
 checkpoint cp_training_crops:
     input:
@@ -165,6 +173,8 @@ rule crop_reproduction_input:
     input:
         fol_ilastik=fol_path_stack_ilastik,
         fol_nuclear=fol_path_stack_nuclear,
+        fol_membrane=fol_path_stack_membrane,
+        fol_full=fol_path_stack_full,
         fn_cropmeta=file_path_img_meta
     output:
         fol_cropinput=directory(fol_path_ilastik_cropinput)
@@ -172,6 +182,8 @@ rule crop_reproduction_input:
         fol_cropinput = Path(output.fol_cropinput)
         fol_ilastik = Path(input.fol_ilastik)
         fol_nuclear = Path(input.fol_nuclear)
+        fol_full = Path(input.fol_full)
+        fol_membrane = Path(input.fol_membrane)
 
         dat_cropmeta = pd.read_csv(input.fn_cropmeta)
         fol_cropinput.mkdir()
@@ -181,6 +193,12 @@ rule crop_reproduction_input:
             fn_out.symlink_to(fn_inp.resolve())
             fn_inp = fol_nuclear / f"{row['basename']}_nuclear.tiff"
             fn_out = fol_cropinput / f"{row['cropname']}_nuclear.tiff"
+            fn_out.symlink_to(fn_inp.resolve())
+            fn_inp = fol_full / f"{row['basename']}_full.tiff"
+            fn_out = fol_cropinput / f"{row['cropname']}_full.tiff"
+            fn_out.symlink_to(fn_inp.resolve())
+            fn_inp = fol_membrane / f"{row['basename']}_membrane.tiff"
+            fn_out = fol_cropinput / f"{row['cropname']}_membrane.tiff"
             fn_out.symlink_to(fn_inp.resolve())
 
 rule get_mask_labels:
@@ -334,7 +352,11 @@ config_dict_cp = {
                             'ilastik_tiff':
                             directory(fol_path_ilastik_tiff_crops),
                             'nuclear_tiff':
-                            directory(fol_path_nuclear_tiff_crops)},
+                            directory(fol_path_nuclear_tiff_crops),
+                            'membrane_tiff':
+                            directory(fol_path_membrane_tiff_crops),
+                            'full_tiff':
+                            directory(fol_path_full_tiff_crops)},
         'input_folder': prepare_data(str(fol_path_project))
     },
     **get_seg_mask_pipe('seg_probab_all',
