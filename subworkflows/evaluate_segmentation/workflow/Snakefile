@@ -98,7 +98,7 @@ fol_path_probab_all = fol_path_project / 'probabilities_all'
 
 fol_pat_masks = fol_path_project / 'masks_{maskversion}'
 fol_pat_mask_labels = fol_path_project / 'masks_{maskversion}_labels'
-fol_path_seg_comparison = fol_path_project / 'seg_comparison_v4'
+fol_path_seg_comparison = fol_path_project / 'seg_comparison_v5'
 
 fol_path_all_masks = str(fol_pat_masks).format(maskversion='all')
 fol_path_loo_masks = str(fol_pat_masks).format(maskversion='loo')
