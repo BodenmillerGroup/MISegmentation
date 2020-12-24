@@ -77,30 +77,46 @@ fol_path_labels=prepare_data(str(fol_path_project / 'training_labels')),
 file_path_feature_matrix=prepare_data(str(fol_path_project / 'feature_matrix.txt')),
 
 # Output:
-file_path_ilastik_all = fol_path_project / 'ilastik_trained_full.ilp'
+
+
 fol_pat_stack = fol_path_results / 'stacks_{stack}'
 fol_path_stack_ilastik = str(fol_pat_stack).format(**{'stack': 'ilastik'})
 fol_path_stack_nuclear = str(fol_pat_stack).format(**{'stack': 'nuclear'})
 fol_path_stack_full = str(fol_pat_stack).format(**{'stack': 'full'})
 fol_path_stack_membrane = str(fol_pat_stack).format(**{'stack': 'membrane'})
-fol_path_ilastik_crops = fol_path_results / 'crops_h5_ilastik'
+
+fol_pat_classifier_crops = fol_path_results / 'crops_h5_{classifier}'
+fol_path_ilastik_crops = str(fol_pat_classifier_crops).format(classifier='ilastik')
+fol_path_imcyto_crops = str(fol_pat_classifier_crops).format(classifier='imcyto')
+
 fol_path_ilastik_tiff_crops = fol_path_results / 'crops_tiff_ilastik'
 fol_path_nuclear_tiff_crops = fol_path_results / 'crops_tiff_nuclear'
 fol_path_full_tiff_crops = fol_path_results / 'crops_tiff_full'
 fol_path_membrane_tiff_crops = fol_path_results / 'crops_tiff_membrane'
 
-file_pat_ilastik_crop = fol_path_ilastik_crops / '{cropname}.h5'
+
+file_pat_classifier_all = fol_path_project / '{classifier}_trained_full.ilp'
+file_path_ilastik_all = str(file_pat_classifier_all).format(classifier='ilastik')
+file_path_imcyto_all = str(file_pat_classifier_all).format(classifier='imcyto')
+
+file_pat_classifier_crop = fol_pat_classifier_crops / '{cropname}.h5'
+file_pat_ilastik_crop = expand(str(file_pat_classifier_crop), classifier='ilastik', allow_missing=True)[0]
+file_pat_imcyto_crop = expand(str(file_pat_classifier_crop), classifier='imcyto', allow_missing=True)[0]
+file_pat_classifier_loo_classifier = fol_path_results / 'loo_class/{cropname}_{classifier}.ilp'
+file_pat_classifier_loo_probabilities = fol_path_results / 'loo_prob/{cropname}_ProbabilitiesLoo{classifier}.tiff'
 file_pat_ilastik_loo_classifier = fol_path_results / 'loo_class/{cropname}.ilp'
 file_pat_ilastik_loo_probabilities = fol_path_results / 'loo_prob/{cropname}_ProbabilitiesLoo.tiff'
 
-fol_path_probab_all = fol_path_project / 'probabilities_all'
+fol_pat_probab_classifier_all = fol_path_project / 'probabilities_{classifier}_all'
+fol_path_probab_ilastik_all = str(fol_pat_probab_classifier_all).format(classifier='ilastik')
+fol_path_probab_imcyto_all = str(fol_pat_probab_classifier_all).format(classifier='imcyto')
 
 
 fol_pat_masks = fol_path_project / 'masks_{maskversion}'
 fol_pat_mask_labels = fol_path_project / 'masks_{maskversion}_labels'
 fol_path_seg_comparison = fol_path_project / 'seg_comparison_v5'
 
-fol_path_all_masks = str(fol_pat_masks).format(maskversion='all')
+fol_path_ilastik_all_masks = str(fol_pat_masks).format(maskversion='all')
 fol_path_loo_masks = str(fol_pat_masks).format(maskversion='loo')
 fol_path_basic_masks = str(fol_pat_masks).format(maskversion='basic')
 fol_path_all_masks_labels = str(fol_pat_mask_labels).format(maskversion='all')
@@ -116,36 +132,49 @@ fn_pat_segment_minsize = 'resources/2_segment_{segpipe}_minsize_{minsize}.cppipe
 seg_minsizes = list(range(2,14,2))
 
 # do all the masks and labels
-masknames = [f'{grp}-minsize-{ms}' for grp in ['all', 'loo', 'basic'] for ms in seg_minsizes ]
+grps = ['basic'] + expand('{classifier}-{prob}', classifier=['ilastik', 'imcyto'], prob=['all', 'loo'])
+masknames = [f'{grp}-minsize-{ms}' for grp in grps for ms in seg_minsizes ]
 fns_masks = [str(fol_pat_masks).format(maskversion=m) for m in masknames]
 fns_masks_labels = [str(fol_pat_mask_labels).format(maskversion=m) for m in masknames]
 
-def training_crops(wildcards):
-    checkpoints.cp_training_crops.get(**wildcards)
-    fn_pat = str(file_pat_ilastik_crop)
-    crops, = glob_wildcards(fn_pat)
-    return crops
 
-def loo_classifiers(wildcards):
-    crop_names = training_crops(wildcards)
-    return expand(file_pat_ilastik_loo_classifier, cropname=crop_names)
-
-def loo_probabilities(wildcards):
-    crop_names = training_crops(wildcards)
-    return expand(file_pat_ilastik_loo_probabilities, cropname=crop_names)
 
 rule all:
     input: fol_path_seg_comparison, fol_path_stack_full, fol_path_stack_membrane,
             fol_path_full_tiff_crops, fol_path_membrane_tiff_crops
     output: touch(has_all)
 
-checkpoint cp_training_crops:
+checkpoint cp_training_ilastik_crops:
     input:
         fol_path_ilastik_crops
     output:
-        temporary(fol_path_project / 'has_training_crops')
+        temporary(fol_path_project / 'has_ilastik_training_crops')
     shell:
         'touch {output[0]}'
+
+def loo_probabilities_ilastik(wildcards):
+    checkpoints.cp_training_ilastik_crops.get(**wildcards)
+    fn_pat = str(file_pat_ilastik_crop)
+    crop_names, = glob_wildcards(fn_pat)
+    return expand(file_pat_classifier_loo_probabilities,
+                  cropname=crop_names,
+                  classifier='ilastik')
+
+checkpoint cp_training_imcyto_crops:
+    input:
+         fol_path_imcyto_crops
+    output:
+          temporary(fol_path_project / 'has_imcyto_training_crops')
+    shell:
+         'touch {output[0]}'
+
+def loo_probabilities_imcyto(wildcards):
+    checkpoints.cp_training_imcyto_crops.get(**wildcards)
+    fn_pat = str(file_pat_imcyto_crop)
+    crop_names, = glob_wildcards(fn_pat)
+    return expand(file_pat_classifier_loo_probabilities,
+                  cropname=crop_names,
+                  classifier='imcyto')
 
 rule ome2analysis:
     input:
@@ -228,8 +257,8 @@ rule get_mask_labels:
 
 rule get_trained_classifier:
     input:
-        fol_labels=fol_path_labels,
-         fol_imgs=fol_path_ilastik_crops,
+         fol_labels=fol_path_labels,
+         fol_imgs=fol_pat_classifier_crops,
          fn_feature_matrix=file_path_feature_matrix,
          fn_file_meta=file_path_img_meta
     params:
@@ -238,7 +267,7 @@ rule get_trained_classifier:
              mem_mb=8000,
              time="80"
     output:
-        file_path_ilastik_all
+        file_pat_classifier_all
     container: ilastik_container
     shell:
         """
@@ -253,8 +282,8 @@ rule get_trained_classifier:
         """
 
 rule get_trained_loo_classifier:
-    input: file_path_ilastik_all
-    output: file_pat_ilastik_loo_classifier
+    input: file_pat_classifier_all
+    output: file_pat_classifier_loo_classifier
     threads: 4
     resources:
         mem_mb=4000
@@ -272,10 +301,10 @@ rule get_trained_loo_classifier:
 
 rule apply_ilastik_loo:
     input:
-         fn = file_pat_ilastik_crop,
-         project = file_pat_ilastik_loo_classifier
+         fn = file_pat_classifier_crop,
+         project = file_pat_classifier_loo_classifier
     output:
-        file_pat_ilastik_loo_probabilities
+        file_pat_classifier_loo_probabilities
 
     container: ilastik_container
     threads: 4
@@ -284,7 +313,10 @@ rule apply_ilastik_loo:
     params:
         bin_ilastik=ilastik_bin,
         output_format='tiff',
-        output_filename= lambda wildcards: str(file_pat_ilastik_loo_probabilities).replace('cropname', 'nickname'),
+        output_filename= lambda wildcards: (
+            expand(str(file_pat_classifier_loo_probabilities), **wildcards, allow_missing=True)[0]
+                .replace('cropname', 'nickname')
+             ),
         export_source='Probabilities',
         export_dtype='uint16',
         export_drange='"[0, 65535]"',
@@ -300,9 +332,6 @@ rule apply_ilastik_loo:
         '--pipeline_result_drange={params.pipeline_result_drange} '
         '--readonly 1 '
         '"{input.fn}"'
-
-
-
 
 def get_seg_mask_pipe(name, input_list, output_folder,
                       pipeline=str(fn_pat_segment).format(segpipe='probabilities')):
@@ -359,24 +388,52 @@ config_dict_cp = {
                             directory(fol_path_full_tiff_crops)},
         'input_folder': prepare_data(str(fol_path_project))
     },
-    **get_seg_mask_pipe('seg_probab_all',
-                        input_list=[fol_path_probab_all],
-                        output_folder=fol_path_all_masks),
-    **{k: v for d in  [get_seg_mask_pipe(f'seg_probab_all_minsize_{ms}',
-                        input_list=[fol_path_probab_all],
-                        output_folder=str(fol_pat_masks).format(maskversion=f'all-minsize-{ms}'),
-                        pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities',
+    'prepare_imcyto':
+        {
+            'message':  """\
+                    Prepare imcyto stacks
+                    
+                    These are simply two color stacks containing
+                    - sum of all nuclear channels
+                    - sum of all membrane channels                 
+                    """,
+            'run_size': 5,
+            'plugins': cp_plugins,
+            'pipeline': 'resources/1_prepare_imcyto.cppipe',
+            'input_files': [
+                fol_path_membrane_tiff_crops,
+                fol_path_nuclear_tiff_crops
+            ],
+            'output_patterns': {'.':
+                                directory(fol_path_imcyto_crops)
+                                },
+        },
+    
+    **{k: v for d in  [get_seg_mask_pipe(f'ilastik_seg_probab_all_minsize_{ms}',
+                                         input_list=[fol_path_probab_ilastik_all],
+                                         output_folder=str(fol_pat_masks).format(maskversion=f'ilastik-all-minsize-{ms}'),
+                                         pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities',
                                                                minsize=ms))
                        for ms in seg_minsizes ] for k, v in d.items()},
-    **get_seg_mask_pipe('seg_probab_loo',
-                        input_list=[loo_probabilities],
-                        output_folder=fol_path_loo_masks),
 
-    **{k: v for d in [get_seg_mask_pipe(f'seg_probab_loo_minsize_{ms}',
-                        input_list=[loo_probabilities],
-                        output_folder=str(fol_pat_masks).format(maskversion=f'loo-minsize-{ms}'),
-                        pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities', minsize=ms))
+    **{k: v for d in [get_seg_mask_pipe(f'ilastik-seg_probab_loo_minsize_{ms}',
+                                        input_list=[loo_probabilities_ilastik],
+                                        output_folder=str(fol_pat_masks).format(maskversion=f'ilastik-loo-minsize-{ms}'),
+                                        pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities', minsize=ms))
                         for ms in seg_minsizes] for k, v in d.items()},
+
+    **{k: v for d in  [get_seg_mask_pipe(f'imcyto_seg_probab_all_minsize_{ms}',
+                                         input_list=[fol_path_probab_imcyto_all],
+                                         output_folder=str(fol_pat_masks).format(maskversion=f'imcyto-all-minsize-{ms}'),
+                                         pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities',
+                                                                                     minsize=ms))
+                       for ms in seg_minsizes ] for k, v in d.items()},
+
+    **{k: v for d in [get_seg_mask_pipe(f'imcyto-seg_probab_loo_minsize_{ms}',
+                                        input_list=[loo_probabilities_imcyto],
+                                        output_folder=str(fol_pat_masks).format(maskversion=f'imcyto-loo-minsize-{ms}'),
+                                        pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities', minsize=ms))
+                      for ms in seg_minsizes] for k, v in d.items()},
 
     **get_seg_mask_pipe('segment_basic',
                         input_list=[fol_path_nuclear_tiff_crops,
@@ -406,14 +463,14 @@ config_dict_cp = {
 }
 
 config_dict_ilastik = {
-    'all':
+    'ilastik_all':
         {'message': """\
                     Runs ilastik classifier run on full dataset
                     """,
          'project': str(file_path_ilastik_all),
          'run_size': 4,
          'output_format': 'tiff',
-         'output_filename': f'{{nickname}}{suffix_full_probablities}{suffix_tiff}',
+         'output_filename': f'{{nickname}}{suffix_full_probablities}Ilastik{suffix_tiff}',
          'export_source': 'Probabilities',
          'export_dtype': 'uint16',
          'pipeline_result_drange': '"[0.0, 1.0]"',
@@ -424,7 +481,27 @@ config_dict_ilastik = {
              fol_path_ilastik_crops,
          'output_pattern':
          # Folder containing probability maps for segmentation
-             directory(fol_path_probab_all)
+             directory(fol_path_probab_ilastik_all)
+         },
+    'imcyto_all':
+        {'message': """\
+                    Runs ilastik classifier run on full dataset
+                    """,
+         'project': str(file_path_imcyto_all),
+         'run_size': 4,
+         'output_format': 'tiff',
+         'output_filename': f'{{nickname}}{suffix_full_probablities}Imcyto{suffix_tiff}',
+         'export_source': 'Probabilities',
+         'export_dtype': 'uint16',
+         'pipeline_result_drange': '"[0.0, 1.0]"',
+         'export_drange': '"[0, 65535]"',
+         'input_files':
+         # Folder containing process hdf5
+         # images for ilastik pixel classification
+             fol_path_imcyto_crops,
+         'output_pattern':
+         # Folder containing probability maps for segmentation
+             directory(fol_path_probab_imcyto_all)
          },
 }
 
