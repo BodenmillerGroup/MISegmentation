@@ -10,6 +10,10 @@ include: 'rules/ilastik.smk'
 # After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
 
 #configfile: 'config/config_prepare.yml'
+from snakemake.remote.SFTP import RemoteProvider
+SFTP = RemoteProvider(username="vitoz",
+                      private_key="../../.ssh/id_rsa_sm")
+
 
 # Allow users to fix the underlying OS via singularity.
 #singularity: "docker://votti/miniconda3mamba:v0.4.2"
@@ -114,7 +118,7 @@ fol_path_probab_imcyto_all = str(fol_pat_probab_classifier_all).format(classifie
 
 fol_pat_masks = fol_path_project / 'masks_{maskversion}'
 fol_pat_mask_labels = fol_path_project / 'masks_{maskversion}_labels'
-fol_path_seg_comparison = fol_path_project / 'seg_comparison_v5'
+fol_path_seg_comparison = fol_path_project / 'seg_comparison_v9'
 
 fol_path_ilastik_all_masks = str(fol_pat_masks).format(maskversion='all')
 fol_path_loo_masks = str(fol_pat_masks).format(maskversion='loo')
@@ -122,6 +126,12 @@ fol_path_basic_masks = str(fol_pat_masks).format(maskversion='basic')
 fol_path_all_masks_labels = str(fol_pat_mask_labels).format(maskversion='all')
 fol_path_loo_masks_labels = str(fol_pat_mask_labels).format(maskversion='loo')
 fol_path_basic_masks_labels = str(fol_pat_mask_labels).format(maskversion='basic')
+
+fol_path_rubenv1_remote_masks = SFTP.remote(f'172.23.56.187/home/vitoz/Data/SegData/ruben_segv1/{project_id}_rubenv1.zip')
+fol_path_rubenv1_remote_probabilities = SFTP.remote(f'172.23.56.187/home/vitoz/Data/SegData/ruben_segv2/{project_id}_rubprobabilities_v2.zip')
+fol_path_rubenv1_masks = str(fol_pat_masks).format(maskversion='rubenv1')
+fol_path_rubenv1_masks_labels = str(fol_pat_mask_labels).format(maskversion='rubenv1')
+fol_path_probab_ruben = fol_path_project /'probabilities_ruben'
 
 has_all = fol_path_project / 'all'
 
@@ -132,7 +142,9 @@ fn_pat_segment_minsize = 'resources/2_segment_{segpipe}_minsize_{minsize}.cppipe
 seg_minsizes = list(range(2,14,2))
 
 # do all the masks and labels
-grps = ['basic'] + expand('{classifier}-{prob}', classifier=['ilastik', 'imcyto'], prob=['all', 'loo'])
+grps = (['basic'] + expand('{classifier}-{prob}', classifier=['ilastik', 'imcyto'], prob=['all', 'loo']) +
+        expand('{classifier}-{prob}', classifier=['ruben'], prob=['all']))
+
 masknames = [f'{grp}-minsize-{ms}' for grp in grps for ms in seg_minsizes ]
 fns_masks = [str(fol_pat_masks).format(maskversion=m) for m in masknames]
 fns_masks_labels = [str(fol_pat_mask_labels).format(maskversion=m) for m in masknames]
@@ -314,7 +326,7 @@ rule apply_ilastik_loo:
         bin_ilastik=ilastik_bin,
         output_format='tiff',
         output_filename= lambda wildcards: (
-            expand(str(file_pat_classifier_loo_probabilities), **wildcards, allow_missing=True)[0]
+            expand(str(file_pat_classifier_loo_probabilities), classifier=wildcards.classifier, allow_missing=True)[0]
                 .replace('cropname', 'nickname')
              ),
         export_source='Probabilities',
@@ -359,6 +371,16 @@ rule adapt_segmentation_minsize:
 
         with open(output[0], 'w') as f:
             f.write(new_pipe)
+
+rule get_ruben_masks:
+    input: fol_path_rubenv1_remote_masks
+    output: directory(fol_path_rubenv1_masks)
+    shell: 'unzip {input[0]} -d {output[0]}'
+
+rule get_ruben_probab:
+    input: fol_path_rubenv1_remote_probabilities
+    output: directory(fol_path_probab_ruben)
+    shell: 'unzip {input[0]} -d {output[0]}'
 
 config_dict_cp = {
         'crop_images':
@@ -434,6 +456,13 @@ config_dict_cp = {
                                         output_folder=str(fol_pat_masks).format(maskversion=f'imcyto-loo-minsize-{ms}'),
                                         pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities', minsize=ms))
                       for ms in seg_minsizes] for k, v in d.items()},
+
+    **{k: v for d in  [get_seg_mask_pipe(f'ruben_seg_probab_all_minsize_{ms}',
+                                         input_list=[fol_path_probab_ruben],
+                                         output_folder=str(fol_pat_masks).format(maskversion=f'ruben-all-minsize-{ms}'),
+                                         pipeline=str(fn_pat_segment_minsize).format(segpipe='probabilities',
+                                                                                     minsize=ms))
+                       for ms in seg_minsizes ] for k, v in d.items()},
 
     **get_seg_mask_pipe('segment_basic',
                         input_list=[fol_path_nuclear_tiff_crops,
